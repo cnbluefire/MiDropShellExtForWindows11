@@ -330,5 +330,4 @@ ASALocalRun/
 # MFractors (Xamarin productivity tool) working folder 
 .mfractor/
 
-/src/nuget/ExplorerContextMenu/tools/
-/src/nuget/ShellExtensions/lib/
+/src/MiDropShellExt.Package/ShellExt

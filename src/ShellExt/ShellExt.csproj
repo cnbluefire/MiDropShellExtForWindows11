@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net9.0-windows</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<Platforms>x64</Platforms>
+		<Platform>x64</Platform>
+		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	</PropertyGroup>
+	
+	<PropertyGroup>
+		<PublishAot>true</PublishAot>
+		<InvariantGlobalization>true</InvariantGlobalization>
+		<StaticallyLinked>true</StaticallyLinked>
+		<OptimizationPreference>Size</OptimizationPreference>
+		<IlcGenerateMstatFile>true</IlcGenerateMstatFile>
+		<IlcGenerateDgmlFile>true</IlcGenerateDgmlFile>
+	</PropertyGroup>
+	
+	<ItemGroup>
+	  <PackageReference Include="ShellExtensions" Version="0.0.9" />
+	</ItemGroup>
+
+</Project>

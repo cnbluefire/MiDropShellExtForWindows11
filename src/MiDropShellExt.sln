@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleApp", "ConsoleApp\Co
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShellExt", "ShellExt\ShellExt.csproj", "{F2683AA5-554F-4E5E-A2A7-181443A36A58}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiDropHelper", "MiDropHelper\MiDropHelper.csproj", "{E659F239-7FF9-4394-9015-8137FBBBB576}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -29,6 +31,10 @@ Global
 		{F2683AA5-554F-4E5E-A2A7-181443A36A58}.Debug|x64.Build.0 = Debug|x64
 		{F2683AA5-554F-4E5E-A2A7-181443A36A58}.Release|x64.ActiveCfg = Release|x64
 		{F2683AA5-554F-4E5E-A2A7-181443A36A58}.Release|x64.Build.0 = Release|x64
+		{E659F239-7FF9-4394-9015-8137FBBBB576}.Debug|x64.ActiveCfg = Debug|x64
+		{E659F239-7FF9-4394-9015-8137FBBBB576}.Debug|x64.Build.0 = Debug|x64
+		{E659F239-7FF9-4394-9015-8137FBBBB576}.Release|x64.ActiveCfg = Release|x64
+		{E659F239-7FF9-4394-9015-8137FBBBB576}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

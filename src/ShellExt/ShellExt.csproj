@@ -22,5 +22,9 @@
 	<ItemGroup>
 	  <PackageReference Include="ShellExtensions" Version="0.0.9" />
 	</ItemGroup>
+	
+	<ItemGroup>
+	  <ProjectReference Include="..\MiDropHelper\MiDropHelper.csproj" />
+	</ItemGroup>
 
 </Project>

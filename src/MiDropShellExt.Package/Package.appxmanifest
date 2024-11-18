@@ -12,7 +12,7 @@
 	<Identity
 	  Name="5f71dad9-3e77-4ada-9fad-12c2e761288f"
 	  Publisher="CN=blue-fire"
-	  Version="1.0.0.0" />
+	  Version="1.0.1.0" />
 
 	<Properties>
 		<DisplayName>MiDropShellExt.Package</DisplayName>

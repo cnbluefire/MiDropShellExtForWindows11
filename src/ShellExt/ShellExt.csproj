@@ -24,7 +24,7 @@
 	</ItemGroup>
 	
 	<ItemGroup>
-	  <ProjectReference Include="..\MiDropHelper\MiDropHelper.csproj" />
+	  <ProjectReference Include="..\MiDrop.Core\MiDrop.Core.csproj" />
 	</ItemGroup>
 
 </Project>

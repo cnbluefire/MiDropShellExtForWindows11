@@ -1,5 +1,6 @@
 ﻿using Microsoft.Win32;
 using ShellExtensions;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -37,10 +38,22 @@ namespace ShellExt
 
         public static unsafe void SendToXiaomiPcManager(string[] files)
         {
-            var launch = MiDropHelper.XiaomiPcManagerHelper.LaunchAsync(default).Result;
-            if (launch)
+            var installLocation = PackageProperties.Current?.PackageInstallLocation;
+            if (!string.IsNullOrEmpty(installLocation))
             {
-                MiDropHelper.XiaomiPcManagerHelper.SendFilesAsync(files, TimeSpan.FromSeconds(1)).Wait();
+                var helperExecute = System.IO.Path.Combine(installLocation, "MiDrop.Helper", "MiDrop.Helper.exe");
+                if (System.IO.File.Exists(helperExecute))
+                {
+                    var key = MiDrop.Core.FilesHelper.SaveFilesAsync(files, default).Result;
+                    if (!string.IsNullOrEmpty(key))
+                    {
+                        try
+                        {
+                            Process.Start(helperExecute, $"--share-files {key}");
+                        }
+                        catch { }
+                    }
+                }
             }
         }
     }

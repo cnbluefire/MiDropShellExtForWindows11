@@ -1,9 +1,10 @@
 ﻿using Microsoft.Win32;
 using System.Diagnostics;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace MiDropHelper;
+namespace MiDrop.Core;
 
 public class XiaomiPcManagerHelper
 {
@@ -55,60 +56,25 @@ public class XiaomiPcManagerHelper
         return Task.FromResult(false);
     }
 
+    public static async Task<bool> SendCachedFilesAsync(string cacheKey, TimeSpan timeout)
+    {
+        var xiaomiFile = await FilesHelper.GetXiaomiFileAsync(cacheKey, default).ConfigureAwait(false);
+        if (!string.IsNullOrEmpty(xiaomiFile))
+        {
+            return await SendFilesAsyncCore(xiaomiFile, timeout);
+        }
+        return false;
+    }
+
     public static Task<bool> SendFilesAsync(string[] files, TimeSpan timeout)
     {
-        if (files == null || files.Length == 0) return Task.FromResult(false);
-
-        var messageWindow = FindMessageWindow();
-        if (messageWindow == 0) return Task.FromResult(false);
-
-        var tcs = new TaskCompletionSource<bool>();
-
-        var thread = new Thread(() =>
+        var xiaomiFile = CreateXiaomiFile(files);
+        if (string.IsNullOrEmpty(xiaomiFile))
         {
-            try
-            {
-                var sb = new StringBuilder();
-                for (int i = 0; i < files.Length; i++)
-                {
-                    var path = files[i];
+            return SendFilesAsyncCore(xiaomiFile, timeout);
+        }
 
-                    if (!string.IsNullOrEmpty(path)
-                        && Path.IsPathRooted(path))
-                    {
-                        if (i != 0) sb.Append('|');
-                        sb.Append(path);
-                    }
-                }
-
-                sb.Append('\0');
-                var file = sb.ToString();
-
-                unsafe
-                {
-                    fixed (char* ptr = file)
-                    {
-                        var s = default(COPYDATASTRUCT);
-                        s.dwData = 0;
-                        s.cbData = (file.Length) * 2;
-                        s.lpData = (nint)ptr;
-
-                        var timeout2 = unchecked((uint)timeout.TotalMilliseconds);
-                        if (timeout2 > 15 * 1000) timeout2 = 15 * 1000;
-                        if (timeout2 < 0) timeout2 = 0;
-
-                        var res = SendMessageTimeoutW(messageWindow, 74, (IntPtr)1, (nint)(&s), 0, timeout2, out var lpdwResult);
-                        tcs.SetResult(res != 0);
-                    }
-                }
-            }
-            catch { }
-            tcs.SetResult(false);
-        });
-        thread.IsBackground = true;
-        thread.Start();
-
-        return tcs.Task;
+        return Task.FromResult(false);
     }
 
     private static Task<bool> LaunchAsyncCore(string executeFile, CancellationToken cancellationToken)
@@ -151,6 +117,69 @@ public class XiaomiPcManagerHelper
 
         return tcs.Task;
     }
+
+
+    internal static Task<bool> SendFilesAsyncCore(string xiaomiFile, TimeSpan timeout)
+    {
+        if (string.IsNullOrEmpty(xiaomiFile)) return Task.FromResult(false);
+        //if (files == null || files.Length == 0) return Task.FromResult(false);
+
+        var messageWindow = FindMessageWindow();
+        if (messageWindow == 0) return Task.FromResult(false);
+
+        var tcs = new TaskCompletionSource<bool>();
+
+        var thread = new Thread(() =>
+        {
+            try
+            {
+                tcs.SetResult(SendFilesCore(messageWindow, xiaomiFile, timeout));
+            }
+            catch { }
+            tcs.SetResult(false);
+
+            unsafe static bool SendFilesCore(nint messageWindow, string xiaomiFiles, TimeSpan timeout)
+            {
+                fixed (char* ptr = xiaomiFiles)
+                {
+                    var s = default(COPYDATASTRUCT);
+                    s.dwData = 0;
+                    s.cbData = (xiaomiFiles.Length) * 2;
+                    s.lpData = (nint)ptr;
+
+                    var timeout2 = unchecked((uint)timeout.TotalMilliseconds);
+                    if (timeout2 > 15 * 1000) timeout2 = 15 * 1000;
+                    if (timeout2 < 0) timeout2 = 0;
+
+                    var res = SendMessageTimeoutW(messageWindow, 74, (IntPtr)1, (nint)(&s), 0, timeout2, out var lpdwResult);
+                    return res != 0;
+                }
+            }
+        });
+        thread.IsBackground = true;
+        thread.Start();
+
+        return tcs.Task;
+    }
+
+    internal static string CreateXiaomiFile(string[] files)
+    {
+        var sb = new StringBuilder();
+        for (int i = 0; i < files.Length; i++)
+        {
+            var path = files[i];
+
+            if (!string.IsNullOrEmpty(path)
+                && Path.IsPathRooted(path))
+            {
+                if (sb.Length > 0) sb.Append('|');
+                sb.Append(path);
+            }
+        }
+
+        return sb.ToString();
+    }
+
 
     private unsafe static nint FindMessageWindow()
     {

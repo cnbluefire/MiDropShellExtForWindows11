@@ -5,11 +5,11 @@ VisualStudioVersion = 17.13.35507.96
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{C7167F0D-BC9F-4E6E-AFE1-012C56B48DB5}") = "MiDropShellExt.Package", "MiDropShellExt.Package\MiDropShellExt.Package.wapproj", "{338A92EA-3827-4B63-870B-A6FDA0B902E5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleApp", "ConsoleApp\ConsoleApp.csproj", "{20AB2056-2FFB-48B3-9E1F-C61EDEA677CD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiDrop.Helper", "MiDrop.Helper\MiDrop.Helper.csproj", "{20AB2056-2FFB-48B3-9E1F-C61EDEA677CD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShellExt", "ShellExt\ShellExt.csproj", "{F2683AA5-554F-4E5E-A2A7-181443A36A58}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiDropHelper", "MiDropHelper\MiDropHelper.csproj", "{E659F239-7FF9-4394-9015-8137FBBBB576}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiDrop.Core", "MiDrop.Core\MiDrop.Core.csproj", "{E659F239-7FF9-4394-9015-8137FBBBB576}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

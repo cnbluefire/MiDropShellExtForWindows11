@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<OutputType>Exe</OutputType>
+		<OutputType>WinExe</OutputType>
 		<TargetFramework>net9.0-windows</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
@@ -21,7 +21,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\ShellExt\ShellExt.csproj" />
+		<PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\ShellExt\ShellExt.csproj" />
 	</ItemGroup>
 
 </Project>

@@ -69,7 +69,7 @@ public class XiaomiPcManagerHelper
     public static Task<bool> SendFilesAsync(string[] files, TimeSpan timeout)
     {
         var xiaomiFile = CreateXiaomiFile(files);
-        if (string.IsNullOrEmpty(xiaomiFile))
+        if (!string.IsNullOrEmpty(xiaomiFile))
         {
             return SendFilesAsyncCore(xiaomiFile, timeout);
         }
@@ -133,10 +133,10 @@ public class XiaomiPcManagerHelper
         {
             try
             {
-                tcs.SetResult(SendFilesCore(messageWindow, xiaomiFile, timeout));
+                tcs.TrySetResult(SendFilesCore(messageWindow, xiaomiFile, timeout));
             }
             catch { }
-            tcs.SetResult(false);
+            tcs.TrySetResult(false);
 
             unsafe static bool SendFilesCore(nint messageWindow, string xiaomiFiles, TimeSpan timeout)
             {

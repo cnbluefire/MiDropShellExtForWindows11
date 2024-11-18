@@ -4,15 +4,17 @@
   xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  xmlns:rescap5="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities/5"
+  xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
   xmlns:desktop4="http://schemas.microsoft.com/appx/manifest/desktop/windows10/4"
   xmlns:desktop5="http://schemas.microsoft.com/appx/manifest/desktop/windows10/5"
   xmlns:com="http://schemas.microsoft.com/appx/manifest/com/windows10"
-  IgnorableNamespaces="uap rescap desktop4 desktop5 com">
+  IgnorableNamespaces="uap rescap rescap5 desktop desktop4 desktop5 com">
 
 	<Identity
 	  Name="5f71dad9-3e77-4ada-9fad-12c2e761288f"
 	  Publisher="CN=blue-fire"
-	  Version="1.0.1.0" />
+	  Version="1.0.2.0" />
 
 	<Properties>
 		<DisplayName>MiDropShellExt.Package</DisplayName>
@@ -44,6 +46,9 @@
 				<uap:SplashScreen Image="Images\SplashScreen.png" />
 			</uap:VisualElements>
 			<Extensions>
+				<desktop:Extension Category="windows.startupTask" Executable="MiDrop.Helper\MiDrop.Helper.exe" EntryPoint="Windows.FullTrustApplication">
+					<desktop:StartupTask DisplayName="MiDrop.Helper" Enabled="true" TaskId="MiDrop.Helper" rescap5:ImmediateRegistration="true"/>
+				</desktop:Extension>
 				<com:Extension Category="windows.comServer">
 					<com:ComServer>
 						<com:SurrogateServer DisplayName="MiDropShellExt">

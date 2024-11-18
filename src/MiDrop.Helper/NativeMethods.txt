@@ -1,0 +1,16 @@
+﻿OpenPackageInfoByFullName
+GetPackageInfo
+ClosePackageInfo
+GetThreadPreferredUILanguages
+SetWindowPos
+GetDpiForMonitor
+GetDpiForWindow
+MonitorFromWindow
+CreateDispatcherQueueController
+
+PACKAGE_INFO
+FILEGROUPDESCRIPTORW
+WINDOW_EX_STYLE
+WINDOW_STYLE
+
+ICompositorDesktopInterop

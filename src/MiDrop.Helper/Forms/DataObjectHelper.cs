@@ -17,6 +17,10 @@ namespace MiDrop.Helper.Forms
         {
             if (dataObject == null) return [];
 
+#if DEBUG
+            var formats = dataObject.GetFormats();
+#endif
+
             var result = ProcessDropFile(dataObject);
             if (result != null) return result;
 
@@ -33,6 +37,13 @@ namespace MiDrop.Helper.Forms
                         if (fileNames != null) MakeFileNameUnique(fileNames);
                     }
                 }
+            }
+            catch { }
+
+            try
+            {
+                var imageResult = ProcessBitmap(dataObject, cancellationToken);
+                if (imageResult != null) return [imageResult];
             }
             catch { }
 
@@ -74,6 +85,31 @@ namespace MiDrop.Helper.Forms
 
                     return [.. files.Select((c, i) => new DataValue(DataType.FilePath, fileNames[i], c))];
                 }
+            }
+            return null;
+        }
+
+        private static DataValue? ProcessBitmap(IDataObject dataObject, CancellationToken cancellationToken)
+        {
+            IDisposable? disposable = null;
+            try
+            {
+                var bitmapObj = dataObject.GetData(DataFormats.Bitmap);
+                disposable = bitmapObj as IDisposable;
+                if (bitmapObj is Bitmap bitmap)
+                {
+                    var fileName = CreateTempFileName(".png");
+                    using (var fs = CreateTempFile(fileName, out var filePath))
+                    {
+                        bitmap.Save(fs, System.Drawing.Imaging.ImageFormat.Png);
+                        return new DataValue(DataType.FilePath, fileName, filePath);
+                    }
+                }
+            }
+            catch { }
+            finally
+            {
+                disposable?.Dispose();
             }
             return null;
         }
@@ -216,7 +252,7 @@ namespace MiDrop.Helper.Forms
         private static string CreateTempFileName(string ext)
         {
             if (!string.IsNullOrEmpty(ext) && ext[0] != '.') ext = $".{ext}";
-            return $"{DateTime.Now:yyyyMMddHHmmss}_{$"{Guid.NewGuid():N}"[..8]}{ext}";
+            return $"{DateTime.Now:yyMMddHHmmss}_{$"{Guid.NewGuid():N}"[..8]}{ext}";
         }
 
         private static FileStream CreateTempFile(string fileName, out string filePath)

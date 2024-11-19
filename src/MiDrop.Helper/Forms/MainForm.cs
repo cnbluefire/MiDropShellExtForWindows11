@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,6 +14,7 @@ using Microsoft.Win32;
 
 using WINDOW_STYLE = Windows.Win32.UI.WindowsAndMessaging.WINDOW_STYLE;
 using WINDOW_EX_STYLE = Windows.Win32.UI.WindowsAndMessaging.WINDOW_EX_STYLE;
+using System.Windows.Forms;
 
 namespace MiDrop.Helper.Forms
 {
@@ -31,15 +33,16 @@ namespace MiDrop.Helper.Forms
         private SpriteVisual? rootVisual;
         private ShapeVisual? shapeVisual;
 
-        private HttpClient? httpClient;
+        private NotifyIcon notifyIcon;
 
         public MainForm()
         {
             this.AllowDrop = true;
             this.FormBorderStyle = FormBorderStyle.None;
             this.ShowInTaskbar = false;
+            this.ClientSize = default;
 
-            ClientSize = default;
+            InitializeNotifyIcon();
 
             var weakThis = new WeakReference(this);
             SystemEvents.DisplaySettingsChanged += OnDisplaySettingsChanged;
@@ -50,6 +53,7 @@ namespace MiDrop.Helper.Forms
                 {
                     SetBounds(WindowWidth, WindowHeight);
                     UpdateRootVisualSize();
+                    UpdateNotifyIcon();
                 }
                 else
                 {
@@ -57,7 +61,6 @@ namespace MiDrop.Helper.Forms
                 }
             }
         }
-
 
         protected override CreateParams CreateParams
         {
@@ -77,6 +80,8 @@ namespace MiDrop.Helper.Forms
                 return cp;
             }
         }
+
+        #region DragDrop
 
         protected override void OnDragOver(DragEventArgs drgevent)
         {
@@ -151,49 +156,9 @@ namespace MiDrop.Helper.Forms
             }
         }
 
-        private unsafe static string[] GetFileNames(MemoryStream fileGroupDescriptorStream)
-        {
-            var fileGroupDescriptorBytes = fileGroupDescriptorStream.ToArray();
+        #endregion DragDrop
 
-            fixed (void* _pFileGroupDescriptor = fileGroupDescriptorBytes)
-            {
-                var pFileGroupDescriptor = (Windows.Win32.UI.Shell.FILEGROUPDESCRIPTORW*)_pFileGroupDescriptor;
-
-                var count = (int)(pFileGroupDescriptor->cItems);
-
-                var names = new string[count];
-
-                var span = pFileGroupDescriptor->fgd.AsSpan(count);
-                for (int i = 0; i < count; i++)
-                {
-                    names[i] = span[i].cFileName.ToString();
-                }
-
-                return names;
-            }
-        }
-
-        private static string GetTempFolder()
-        {
-            var tmpFolder = System.IO.Path.Combine(Path.GetTempPath(), "MiDrop.Helper");
-            if (!Directory.Exists(tmpFolder)) Directory.CreateDirectory(tmpFolder);
-
-            var subFolder = "";
-
-            do
-            {
-                subFolder = System.IO.Path.Combine(tmpFolder, $"{Guid.NewGuid():N}"[..8]);
-            } while (Directory.Exists(subFolder));
-            Directory.CreateDirectory(subFolder);
-
-            return subFolder;
-        }
-
-
-        protected override void OnShown(EventArgs e)
-        {
-            base.OnShown(e);
-        }
+        #region Window Lifetime
 
         protected override void OnHandleCreated(EventArgs e)
         {
@@ -223,9 +188,11 @@ namespace MiDrop.Helper.Forms
                 shape.StrokeBrush = CompositionHelper.Compositor.CreateColorBrush(Windows.UI.Color.FromArgb(80, 0, 0, 0));
                 shape.StrokeThickness = 1f;
 
+                var shapeVisualOffset = GetShapeVisualOffset(false);
+
                 shapeVisual = CompositionHelper.Compositor.CreateShapeVisual();
                 shapeVisual.Size = new System.Numerics.Vector2(GeometryWidth, GeometryMaxHeight);
-                shapeVisual.Offset = GetShapeVisualOffset(false);
+                shapeVisual.Offset = shapeVisualOffset;
                 shapeVisual.Shapes.Add(shape);
 
                 var offsetAnimation = CompositionHelper.Compositor.CreateVector3KeyFrameAnimation();
@@ -241,13 +208,9 @@ namespace MiDrop.Helper.Forms
 
                 SetBounds(WindowWidth, WindowHeight);
                 UpdateRootVisualSize();
-            }
-        }
 
-        private static System.Numerics.Vector3 GetShapeVisualOffset(bool isDragOver)
-        {
-            var height = isDragOver ? GeometryDragOverHeight : GeometryNormalHeight;
-            return new System.Numerics.Vector3((WindowWidth - GeometryWidth) / 2, -GeometryMaxHeight + height, 0);
+                PlayFlashAnimation(TimeSpan.FromSeconds(3));
+            }
         }
 
         protected override void OnDpiChanged(DpiChangedEventArgs e)
@@ -258,6 +221,170 @@ namespace MiDrop.Helper.Forms
             UpdateRootVisualSize();
         }
 
+        protected override void OnClosed(EventArgs e)
+        {
+            base.OnClosed(e);
+
+            desktopWindowTarget?.Dispose();
+            desktopWindowTarget = null;
+        }
+
+        private void PlayFlashAnimation(TimeSpan duration)
+        {
+            if (!this.AllowDrop) return;
+
+            this.AllowDrop = false;
+            var shapeVisual = this.shapeVisual;
+            if (shapeVisual == null) return;
+
+            SetBounds(WindowWidth, WindowHeight + 8);
+
+            var shapeVisualOffset1 = GetShapeVisualOffset(false);
+            var shapeVisualOffset2 = shapeVisualOffset1;
+            shapeVisualOffset2.Y = -GeometryMaxHeight + WindowHeight + 8 - 1;
+
+            var firstShowOffsetAnimation = CompositionHelper.Compositor.CreateVector3KeyFrameAnimation();
+            firstShowOffsetAnimation.InsertKeyFrame(0, shapeVisualOffset1);
+            firstShowOffsetAnimation.InsertKeyFrame(0.1f, shapeVisualOffset2);
+            firstShowOffsetAnimation.InsertKeyFrame(0.9f, shapeVisualOffset2);
+            firstShowOffsetAnimation.InsertKeyFrame(1f, shapeVisualOffset1);
+            firstShowOffsetAnimation.Duration = duration;
+            firstShowOffsetAnimation.Target = "Offset";
+
+            var firstShowOpacityAnimation = CompositionHelper.Compositor.CreateScalarKeyFrameAnimation();
+            firstShowOpacityAnimation.InsertKeyFrame(0, 1);
+            firstShowOpacityAnimation.InsertKeyFrame(0.5f, 0.8f);
+            firstShowOpacityAnimation.InsertKeyFrame(1f, 1);
+            firstShowOpacityAnimation.Duration = duration / 3;
+            firstShowOpacityAnimation.IterationBehavior = AnimationIterationBehavior.Count;
+            firstShowOpacityAnimation.IterationCount = 3;
+            firstShowOpacityAnimation.Target = "Opacity";
+
+            var firstShowAnimationGroup = CompositionHelper.Compositor.CreateAnimationGroup();
+            firstShowAnimationGroup.Add(firstShowOffsetAnimation);
+            firstShowAnimationGroup.Add(firstShowOpacityAnimation);
+
+            var batch = CompositionHelper.Compositor.CreateScopedBatch(CompositionBatchTypes.Animation);
+            shapeVisual.StartAnimationGroup(firstShowAnimationGroup);
+            batch.Completed += (_, _) =>
+            {
+                shapeVisual.Offset = shapeVisualOffset1;
+                this.InvokeAsync(() =>
+                {
+                    if (!this.IsDisposed)
+                    {
+                        SetBounds(WindowWidth, WindowHeight);
+                        this.AllowDrop = true;
+                    }
+                });
+            };
+            batch.End();
+
+        }
+
+        #endregion Window Lifetime
+
+        #region Notify Icon
+
+        [MemberNotNull(nameof(notifyIcon))]
+        private void InitializeNotifyIcon()
+        {
+            const string MenuItemName_OpenXiaomiPcManager = "open-xiaomi-pc-manager";
+            //const string MenuItemName_Settings = "settings";
+            const string MenuItemName_Exit = "exit";
+
+            notifyIcon = new NotifyIcon()
+            {
+                Text = "MiDrop Helper",
+                ContextMenuStrip = new ContextMenuStrip()
+                {
+                    Items =
+                    {
+                        new ToolStripMenuItem("MiDrop Helper")
+                        {
+                            Enabled = false
+                        },
+                        new ToolStripMenuItem("打开小米电脑管家",null, OnNotifyIconMenuItemClick, MenuItemName_OpenXiaomiPcManager),
+                        //new ToolStripMenuItem("MiDrop Helper 设置",null, OnNotifyIconMenuItemClick, MenuItemName_Settings),
+                        new ToolStripMenuItem("退出",null, OnNotifyIconMenuItemClick, MenuItemName_Exit)
+                    },
+                    RenderMode = ToolStripRenderMode.System,
+                },
+            };
+            notifyIcon.MouseClick += OnNotifyIconMouseClick;
+            notifyIcon.DoubleClick += OnNotifyIconDoubleClick;
+            UpdateNotifyIcon();
+            notifyIcon.Visible = true;
+
+            void OnNotifyIconMouseClick(object? sender, MouseEventArgs e)
+            {
+                if (e.Button == MouseButtons.Left)
+                {
+                    PlayFlashAnimation(TimeSpan.FromSeconds(2));
+                }
+            }
+
+            async void OnNotifyIconDoubleClick(object? sender, EventArgs e)
+            {
+                await OpenXiaomiPcManagerAsync();
+            }
+
+            async void OnNotifyIconMenuItemClick(object? sender, EventArgs e)
+            {
+                if (sender is ToolStripMenuItem menuItem)
+                {
+                    switch (menuItem.Name)
+                    {
+                        case MenuItemName_OpenXiaomiPcManager:
+                            {
+                                await OpenXiaomiPcManagerAsync();
+                            }
+                            break;
+
+                        case MenuItemName_Exit:
+                            {
+                                if (notifyIcon != null) notifyIcon.Visible = false;
+                                Application.Exit();
+                            }
+                            break;
+                    }
+                }
+            }
+
+            async Task OpenXiaomiPcManagerAsync()
+            {
+                try
+                {
+                    await MiDrop.Core.XiaomiPcManagerHelper.LaunchAsync("--open_controlcenter", default);
+                }
+                catch { }
+            }
+        }
+
+        private void UpdateNotifyIcon()
+        {
+            if (notifyIcon == null) return;
+
+            var executeFile = MiDrop.Core.XiaomiPcManagerHelper.GetXiaomiPcManagerExecuteFile();
+            if (string.IsNullOrEmpty(executeFile)) return;
+
+            try
+            {
+                var oldIcon = notifyIcon.Icon;
+                notifyIcon.Icon = Icon.ExtractIcon(executeFile, -32512, 32);
+                oldIcon?.Dispose();
+            }
+            catch { }
+        }
+
+        #endregion Notify Icon
+
+        private static System.Numerics.Vector3 GetShapeVisualOffset(bool isDragOver)
+        {
+            var height = isDragOver ? GeometryDragOverHeight : GeometryNormalHeight;
+            return new System.Numerics.Vector3((WindowWidth - GeometryWidth) / 2, -GeometryMaxHeight + height, 0);
+        }
+
         private void UpdateRootVisualSize()
         {
             if (rootVisual != null)
@@ -266,14 +393,6 @@ namespace MiDrop.Helper.Forms
                 rootVisual.Scale = new System.Numerics.Vector3(dpi / 96f, dpi / 96f, 1);
                 rootVisual.Size = new System.Numerics.Vector2(80, 10);
             }
-        }
-
-        protected override void OnClosed(EventArgs e)
-        {
-            base.OnClosed(e);
-
-            desktopWindowTarget?.Dispose();
-            desktopWindowTarget = null;
         }
 
         public void SetBounds(int width, int height)

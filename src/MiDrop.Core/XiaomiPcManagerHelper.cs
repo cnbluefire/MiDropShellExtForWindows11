@@ -45,13 +45,21 @@ public class XiaomiPcManagerHelper
 
     public static Task<bool> LaunchAsync(CancellationToken cancellationToken)
     {
+        return LaunchAsync(null, cancellationToken);
+    }
+
+    public static Task<bool> LaunchAsync(string? arguments, CancellationToken cancellationToken)
+    {
         var messageWindow = FindMessageWindow();
-        if (messageWindow != 0) return Task.FromResult(true);
+        if (messageWindow != 0)
+        {
+            if (string.IsNullOrEmpty(arguments)) return Task.FromResult(true);
+        }
 
         var executeFile = GetXiaomiPcManagerExecuteFile();
         if (!string.IsNullOrEmpty(executeFile))
         {
-            return LaunchAsyncCore(executeFile, cancellationToken);
+            return LaunchAsyncCore(executeFile, arguments, cancellationToken);
         }
         return Task.FromResult(false);
     }
@@ -77,9 +85,9 @@ public class XiaomiPcManagerHelper
         return Task.FromResult(false);
     }
 
-    private static Task<bool> LaunchAsyncCore(string executeFile, CancellationToken cancellationToken)
+    private static Task<bool> LaunchAsyncCore(string executeFile, string? arguments, CancellationToken cancellationToken)
     {
-        var psi = new ProcessStartInfo(executeFile)
+        var psi = new ProcessStartInfo(executeFile, arguments ?? "")
         {
             UseShellExecute = true
         };

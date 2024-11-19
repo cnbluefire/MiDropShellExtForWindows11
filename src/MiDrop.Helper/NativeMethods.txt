@@ -7,10 +7,13 @@ GetDpiForMonitor
 GetDpiForWindow
 MonitorFromWindow
 CreateDispatcherQueueController
+DeleteObject
 
 PACKAGE_INFO
 FILEGROUPDESCRIPTORW
+SHDRAGIMAGE
 WINDOW_EX_STYLE
 WINDOW_STYLE
 
 ICompositorDesktopInterop
+IDataObject

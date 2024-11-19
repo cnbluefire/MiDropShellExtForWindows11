@@ -114,121 +114,27 @@ namespace MiDrop.Helper.Forms
             var data = drgevent.Data;
             if (data != null)
             {
-                if (data.GetDataPresent(DataFormats.FileDrop))
+                var dataValues = await DataObjectHelper.ProcessDataObjectAsync(data, default);
+                if (dataValues != null && dataValues.Length > 0)
                 {
-                    if (data.GetData(DataFormats.FileDrop) is string[] files)
+                    var files = dataValues
+                        .Where(c => c.DataType == DataObjectHelper.DataType.FilePath && !string.IsNullOrEmpty(c.Value))
+                        .Select(c => c.Value!)
+                        .ToArray();
+
+                    if (files.Length > 0)
                     {
                         await MiDrop.Core.XiaomiPcManagerHelper.LaunchAsync(default);
                         await MiDrop.Core.XiaomiPcManagerHelper.SendFilesAsync(files, TimeSpan.FromSeconds(5));
                     }
-                }
-                else if (data.GetDataPresent("text/x-moz-url"))
-                {
-                    if (data.GetData("text/x-moz-url") is MemoryStream memoryStream)
+
+                    var text = dataValues
+                        .FirstOrDefault(c => c.DataType == DataObjectHelper.DataType.Text && !string.IsNullOrEmpty(c.Value))?
+                        .Value;
+
+                    if (!string.IsNullOrEmpty(text))
                     {
-                        using (memoryStream)
-                        {
-                            var parts = Encoding.Unicode.GetString(memoryStream.ToArray()).Split((char)10);
-                            if (parts.Length > 0
-                                && Uri.TryCreate(parts[0], UriKind.Absolute, out var uri))
-                            {
-                                var launch = await MiDrop.Core.XiaomiPcManagerHelper.LaunchAsync(default);
-                                if (launch)
-                                {
-                                    var fileName = System.IO.Path.GetFileName(uri.LocalPath);
-                                    if (string.IsNullOrEmpty(System.IO.Path.GetExtension(fileName)))
-                                    {
-                                        if (data.GetDataPresent("FileGroupDescriptorW")
-                                            && data.GetData("FileGroupDescriptorW") is MemoryStream fileGroupDescriptorStream)
-                                        {
-                                            using (fileGroupDescriptorStream)
-                                            {
-                                                var names = GetFileNames(fileGroupDescriptorStream);
-                                                if (names != null && names.Length > 0) fileName = names[0];
-                                            }
-                                        }
-                                    }
-
-                                    if (httpClient == null) httpClient = new HttpClient();
-
-                                    try
-                                    {
-                                        var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-                                        var stream = await httpClient.GetStreamAsync(uri, cts.Token);
-
-                                        var tempFolder = GetTempFolder();
-                                        var fullName = System.IO.Path.Combine(tempFolder, fileName);
-                                        using (var fs = new FileStream(fullName, FileMode.Create, FileAccess.Write))
-                                        {
-                                            await stream.CopyToAsync(fs);
-                                        }
-
-                                        await MiDrop.Core.XiaomiPcManagerHelper.SendFilesAsync([fullName], TimeSpan.FromSeconds(5));
-                                    }
-                                    catch { }
-                                }
-                            }
-                        }
-                    }
-                }
-                else if (data.GetDataPresent("FileGroupDescriptorW")
-                    && data.GetDataPresent("FileContents"))
-                {
-                    if (data.GetData("FileGroupDescriptorW") is MemoryStream fileGroupDescriptorStream)
-                    {
-                        using (fileGroupDescriptorStream)
-                        {
-                            var names = GetFileNames(fileGroupDescriptorStream);
-
-                            var fileContents = (MemoryStream[]?)data.GetData("FileContents");
-
-                            if (names.Length > 0 && fileContents != null && fileContents.Length == names.Length)
-                            {
-                                var launch = await MiDrop.Core.XiaomiPcManagerHelper.LaunchAsync(default);
-                                if (launch)
-                                {
-                                    var tempFolder = GetTempFolder();
-
-                                    var fullPaths = new List<string>();
-                                    var nameDict = new Dictionary<string, int>();
-                                    for (int i = 0; i < names.Length; i++)
-                                    {
-                                        using (fileContents[i])
-                                        {
-                                            if (nameDict.TryGetValue(names[i], out var v)) v++;
-                                            else v = 0;
-                                            nameDict[names[i]] = v;
-                                            if (v > 0)
-                                            {
-                                                names[i] = $"{names[i]} ({v})";
-                                            }
-
-                                            try
-                                            {
-                                                var fileName = System.IO.Path.Combine(tempFolder, names[i]);
-                                                using (var fs = new FileStream(fileName, FileMode.Create, FileAccess.Write))
-                                                {
-                                                    await fileContents[i].CopyToAsync(fs);
-                                                    fullPaths.Add(fileName);
-                                                }
-                                            }
-                                            catch { }
-                                        }
-                                    }
-
-                                    if (fullPaths.Count > 0)
-                                    {
-                                        await MiDrop.Core.XiaomiPcManagerHelper.SendFilesAsync([.. fullPaths], TimeSpan.FromSeconds(5));
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                else if (data.GetDataPresent(DataFormats.Text))
-                {
-                    if (data.GetData(DataFormats.Text) is string text)
-                    {
+                        await MiDrop.Core.XiaomiPcManagerHelper.LaunchAsync(default);
                         for (int i = 0; i < 3; i++)
                         {
                             try
@@ -240,6 +146,8 @@ namespace MiDrop.Helper.Forms
                         }
                     }
                 }
+
+                return;
             }
         }
 

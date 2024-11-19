@@ -10,6 +10,7 @@
 		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<UseWindowsForms>true</UseWindowsForms>
+		<ApplicationManifest>app.manifest</ApplicationManifest>
 	</PropertyGroup>
 
 	<PropertyGroup>
@@ -24,7 +25,8 @@
 		<UseSystemResourceKeys>true</UseSystemResourceKeys>
 		<EnableUnsafeBinaryFormatterSerialization>true</EnableUnsafeBinaryFormatterSerialization>
 		<CustomResourceTypesSupport>true</CustomResourceTypesSupport>
-		<ApplicationManifest>app.manifest</ApplicationManifest>
+		<IlcGenerateMstatFile>true</IlcGenerateMstatFile>
+		<IlcGenerateDgmlFile>true</IlcGenerateDgmlFile>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -41,7 +43,25 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\ShellExt\ShellExt.csproj" />
+		<ProjectReference Include="..\MiDrop.Core\MiDrop.Core.csproj" />
 	</ItemGroup>
+
+	<Target Name="RemoveWPFReference" BeforeTargets="WriteIlcRspFileForCompilation">
+		<ItemGroup>
+			<IlcReference Remove="@(IlcReference)" Condition="'%(Filename)' == 'PresentationFramework'" />
+		</ItemGroup>
+	</Target>
+
+	<Target Name="RemoveWPFNativeDll" AfterTargets="ComputeLinkedFilesToPublish">
+		<ItemGroup>
+			<_WPFNativeDll Include="D3DCompiler_47_cor3.dll" />
+			<_WPFNativeDll Include="PenImc_cor3.dll" />
+			<_WPFNativeDll Include="vcruntime140_cor3.dll" />
+			<_WPFNativeDll Include="wpfgfx_cor3.dll" />
+
+			<_ResolvedCopyLocalPublishAssets Remove="@(_ResolvedCopyLocalPublishAssets)" 
+											 Condition="'%(Filename)%(Extension)' == '@(_WPFNativeDll)'" />
+		</ItemGroup>
+	</Target>
 
 </Project>

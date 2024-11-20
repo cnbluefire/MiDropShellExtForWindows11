@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Windows.UI.Composition;
 
-namespace MiDrop.Helper.Forms
+namespace MiDrop.Helper.Utils
 {
     internal static class DataObjectHelper
     {
@@ -80,7 +80,7 @@ namespace MiDrop.Helper.Forms
             {
                 if (dataObject.GetData(DataFormats.FileDrop) is string[] files && files.Length > 0)
                 {
-                    string[] fileNames = [.. files.Select(c => System.IO.Path.GetFileName(c))];
+                    string[] fileNames = [.. files.Select(c => Path.GetFileName(c))];
                     MakeFileNameUnique(fileNames);
 
                     return [.. files.Select((c, i) => new DataValue(DataType.FilePath, fileNames[i], c))];
@@ -177,7 +177,7 @@ namespace MiDrop.Helper.Forms
                         {
                             if (!uri.Host.Equals("loc.dingtalk.com", StringComparison.OrdinalIgnoreCase))
                             {
-                                var fileName = System.IO.Path.GetFileName(uri.LocalPath);
+                                var fileName = Path.GetFileName(uri.LocalPath);
                                 if (fileNames != null && fileNames.Length > i && !string.IsNullOrEmpty(fileNames[i]))
                                 {
                                     fileName = fileNames[i];
@@ -233,9 +233,9 @@ namespace MiDrop.Helper.Forms
                     {
                         var tempFolder = GetTempFolder();
                         var fileName = CreateTempFileName(".txt");
-                        var fullPath = System.IO.Path.Combine(tempFolder, fileName);
+                        var fullPath = Path.Combine(tempFolder, fileName);
 
-                        await System.IO.File.WriteAllTextAsync(fullPath, text, cancellationToken);
+                        await File.WriteAllTextAsync(fullPath, text, cancellationToken);
                         return new DataValue(DataType.FilePath, fileName, fullPath);
                     }
                     catch { }
@@ -258,7 +258,7 @@ namespace MiDrop.Helper.Forms
         private static FileStream CreateTempFile(string fileName, out string filePath)
         {
             var tempFolder = GetTempFolder();
-            filePath = System.IO.Path.Combine(tempFolder, fileName);
+            filePath = Path.Combine(tempFolder, fileName);
 
             try
             {
@@ -266,7 +266,7 @@ namespace MiDrop.Helper.Forms
             }
             catch
             {
-                try { System.IO.File.Delete(filePath); } catch { }
+                try { File.Delete(filePath); } catch { }
                 throw;
             }
         }
@@ -287,7 +287,7 @@ namespace MiDrop.Helper.Forms
 
         private static string GetTempFolder()
         {
-            var tmpFolder = System.IO.Path.Combine(Path.GetTempPath(), "MiDrop.Helper");
+            var tmpFolder = Path.Combine(Path.GetTempPath(), "MiDrop.Helper");
             if (!Directory.Exists(tmpFolder))
             {
                 Directory.CreateDirectory(tmpFolder);
@@ -318,7 +318,7 @@ namespace MiDrop.Helper.Forms
 
             do
             {
-                subFolder = System.IO.Path.Combine(tmpFolder, $"{Guid.NewGuid():N}"[..8]);
+                subFolder = Path.Combine(tmpFolder, $"{Guid.NewGuid():N}"[..8]);
             } while (Directory.Exists(subFolder));
             Directory.CreateDirectory(subFolder);
 
@@ -350,7 +350,7 @@ namespace MiDrop.Helper.Forms
 
                 if (pFileGroupDescriptor != null)
                 {
-                    var count = (int)(pFileGroupDescriptor->cItems);
+                    var count = (int)pFileGroupDescriptor->cItems;
 
                     var names = new string[count];
 

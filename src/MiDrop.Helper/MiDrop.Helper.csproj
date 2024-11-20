@@ -59,8 +59,7 @@
 			<_WPFNativeDll Include="vcruntime140_cor3.dll" />
 			<_WPFNativeDll Include="wpfgfx_cor3.dll" />
 
-			<_ResolvedCopyLocalPublishAssets Remove="@(_ResolvedCopyLocalPublishAssets)" 
-											 Condition="'%(Filename)%(Extension)' == '@(_WPFNativeDll)'" />
+			<_ResolvedCopyLocalPublishAssets Remove="@(_ResolvedCopyLocalPublishAssets)" Condition="'%(Filename)%(Extension)' == '@(_WPFNativeDll)'" />
 		</ItemGroup>
 	</Target>
 

@@ -11,7 +11,7 @@ using WinRT;
 using Windows.Win32.System.WinRT.Composition;
 using WinRT.Interop;
 
-namespace MiDrop.Helper.Forms
+namespace MiDrop.Helper.Utils
 {
     internal static class CompositionHelper
     {
@@ -29,7 +29,7 @@ namespace MiDrop.Helper.Forms
                     {
                         if (compositor == null)
                         {
-                            dispatcherQueueController = CreateDispatcherQueueController(false);
+                            dispatcherQueueController = DispatcherQueueInterop.CreateDispatcherQueueController(false);
                             var monitor = new object();
 
                             dispatcherQueueController.DispatcherQueue.TryEnqueue(() =>
@@ -66,11 +66,11 @@ namespace MiDrop.Helper.Forms
                 try
                 {
                     var interop = (ICompositorDesktopInterop*)ptr;
-                    var hr = ((delegate* unmanaged[Stdcall]<Windows.Win32.System.WinRT.Composition.ICompositorDesktopInterop*, Windows.Win32.Foundation.HWND, Windows.Win32.Foundation.BOOL, void**, Windows.Win32.Foundation.HRESULT>)(*(void***)(interop))[3])(
+                    var hr = ((delegate* unmanaged[Stdcall]<ICompositorDesktopInterop*, Windows.Win32.Foundation.HWND, Windows.Win32.Foundation.BOOL, void**, Windows.Win32.Foundation.HRESULT>)(*(void***)interop)[3])(
                         interop,
                         (Windows.Win32.Foundation.HWND)hWnd,
                         (Windows.Win32.Foundation.BOOL)topMost,
-                        (void**)(&pTarget));
+                        (void**)&pTarget);
 
                     if (hr.Succeeded)
                     {
@@ -84,25 +84,6 @@ namespace MiDrop.Helper.Forms
                 }
             }
             return null;
-        }
-
-        private static DispatcherQueueController CreateDispatcherQueueController(bool currentThread)
-        {
-            var options = new Windows.Win32.System.WinRT.DispatcherQueueOptions()
-            {
-                apartmentType = Windows.Win32.System.WinRT.DISPATCHERQUEUE_THREAD_APARTMENTTYPE.DQTAT_COM_STA,
-                threadType = currentThread ? Windows.Win32.System.WinRT.DISPATCHERQUEUE_THREAD_TYPE.DQTYPE_THREAD_CURRENT :
-                    Windows.Win32.System.WinRT.DISPATCHERQUEUE_THREAD_TYPE.DQTYPE_THREAD_DEDICATED,
-                dwSize = (uint)Marshal.SizeOf<Windows.Win32.System.WinRT.DispatcherQueueOptions>()
-            };
-            CreateDispatcherQueueController(options, out var result).ThrowOnFailure();
-            return DispatcherQueueController.FromAbi(result);
-
-            [DllImport("CoreMessaging.dll", ExactSpelling = true)]
-            static extern Windows.Win32.Foundation.HRESULT CreateDispatcherQueueController(
-                Windows.Win32.System.WinRT.DispatcherQueueOptions options,
-                out nint dispatcherQueueController);
-
         }
     }
 }

@@ -11,22 +11,23 @@ using System.Runtime.InteropServices;
 using Windows.UI.Composition.Desktop;
 using Windows.UI.Composition;
 using Microsoft.Win32;
+using MiDrop.Helper.Utils;
 
 using WINDOW_STYLE = Windows.Win32.UI.WindowsAndMessaging.WINDOW_STYLE;
 using WINDOW_EX_STYLE = Windows.Win32.UI.WindowsAndMessaging.WINDOW_EX_STYLE;
-using System.Windows.Forms;
 
 namespace MiDrop.Helper.Forms
 {
     public class MainForm : Form
     {
         private const int WindowWidth = 120;
-        private const int WindowHeight = 10;
+        private const int WindowHeight = 12;
 
         private const float GeometryMaxWidth = WindowWidth - 10;
         private const float GeometryMaxHeight = 40;
         private const float GeometryWidth = GeometryMaxWidth;
-        private const float GeometryNormalHeight = WindowHeight - 10;
+        private const float GeometryHiddenHeight = 0;
+        private const float GeometryTipHeight = WindowHeight - 6;
         private const float GeometryDragOverHeight = WindowHeight - 2;
 
         private DesktopWindowTarget? desktopWindowTarget;
@@ -46,6 +47,9 @@ namespace MiDrop.Helper.Forms
 
             var weakThis = new WeakReference(this);
             SystemEvents.DisplaySettingsChanged += OnDisplaySettingsChanged;
+
+            DragDropListener.DragDropStarted += OnSystemDragDropStarted;
+            DragDropListener.DragDropStopped += OnSystemDragDropStopped;
 
             void OnDisplaySettingsChanged(object? sender, EventArgs e)
             {
@@ -90,7 +94,7 @@ namespace MiDrop.Helper.Forms
 
             if (shapeVisual != null)
             {
-                shapeVisual.Offset = GetShapeVisualOffset(true);
+                shapeVisual.Offset = GetShapeVisualOffset(ShapeVisualState.DragOver);
             }
         }
 
@@ -100,7 +104,14 @@ namespace MiDrop.Helper.Forms
 
             if (shapeVisual != null)
             {
-                shapeVisual.Offset = GetShapeVisualOffset(false);
+                if (DragDropListener.IsDragging)
+                {
+                    shapeVisual.Offset = GetShapeVisualOffset(ShapeVisualState.Tip);
+                }
+                else
+                {
+                    shapeVisual.Offset = GetShapeVisualOffset(ShapeVisualState.Hidden);
+                }
             }
 
             SetBounds(WindowWidth, WindowHeight);
@@ -113,7 +124,7 @@ namespace MiDrop.Helper.Forms
 
             if (shapeVisual != null)
             {
-                shapeVisual.Offset = GetShapeVisualOffset(false);
+                shapeVisual.Offset = GetShapeVisualOffset(ShapeVisualState.Hidden);
             }
 
             var data = drgevent.Data;
@@ -156,6 +167,24 @@ namespace MiDrop.Helper.Forms
             }
         }
 
+
+        private void OnSystemDragDropStarted(object? sender, EventArgs e)
+        {
+            if (shapeVisual != null)
+            {
+                shapeVisual.Offset = GetShapeVisualOffset(ShapeVisualState.Tip);
+            }
+        }
+
+        private void OnSystemDragDropStopped(object? sender, EventArgs e)
+        {
+            if (shapeVisual != null)
+            {
+                shapeVisual.Offset = GetShapeVisualOffset(ShapeVisualState.Hidden);
+            }
+        }
+
+
         #endregion DragDrop
 
         #region Window Lifetime
@@ -170,6 +199,11 @@ namespace MiDrop.Helper.Forms
 
             base.OnHandleCreated(e);
 
+            if (Environment.OSVersion.Version >= new Version(10, 0, 19041, 0))
+            {
+                Windows.Win32.PInvoke.SetWindowDisplayAffinity((HWND)Handle, Windows.Win32.UI.WindowsAndMessaging.WINDOW_DISPLAY_AFFINITY.WDA_EXCLUDEFROMCAPTURE);
+            }
+
             desktopWindowTarget = CompositionHelper.CreateDesktopWindowTarget(Handle, true);
             if (desktopWindowTarget != null)
             {
@@ -179,16 +213,16 @@ namespace MiDrop.Helper.Forms
 
                 desktopWindowTarget.Root = rootVisual;
 
-                var geomertry = CompositionHelper.Compositor.CreateRoundedRectangleGeometry();
-                geomertry.Size = new System.Numerics.Vector2(GeometryWidth, GeometryMaxHeight);
-                geomertry.CornerRadius = new System.Numerics.Vector2(4);
+                var geometry = CompositionHelper.Compositor.CreateRoundedRectangleGeometry();
+                geometry.Size = new System.Numerics.Vector2(GeometryWidth, GeometryMaxHeight);
+                geometry.CornerRadius = new System.Numerics.Vector2(4);
 
-                var shape = CompositionHelper.Compositor.CreateSpriteShape(geomertry);
+                var shape = CompositionHelper.Compositor.CreateSpriteShape(geometry);
                 shape.FillBrush = CompositionHelper.Compositor.CreateColorBrush(Windows.UI.Color.FromArgb(220, 255, 255, 255));
                 shape.StrokeBrush = CompositionHelper.Compositor.CreateColorBrush(Windows.UI.Color.FromArgb(80, 0, 0, 0));
                 shape.StrokeThickness = 1f;
 
-                var shapeVisualOffset = GetShapeVisualOffset(false);
+                var shapeVisualOffset = GetShapeVisualOffset(ShapeVisualState.Hidden);
 
                 shapeVisual = CompositionHelper.Compositor.CreateShapeVisual();
                 shapeVisual.Size = new System.Numerics.Vector2(GeometryWidth, GeometryMaxHeight);
@@ -197,7 +231,7 @@ namespace MiDrop.Helper.Forms
 
                 var offsetAnimation = CompositionHelper.Compositor.CreateVector3KeyFrameAnimation();
                 offsetAnimation.InsertExpressionKeyFrame(1f, "this.FinalValue");
-                offsetAnimation.Duration = TimeSpan.FromSeconds(0.2);
+                offsetAnimation.Duration = TimeSpan.FromSeconds(0.3);
                 offsetAnimation.Target = "Offset";
 
                 var imp = CompositionHelper.Compositor.CreateImplicitAnimationCollection();
@@ -208,8 +242,6 @@ namespace MiDrop.Helper.Forms
 
                 SetBounds(WindowWidth, WindowHeight);
                 UpdateRootVisualSize();
-
-                PlayFlashAnimation(TimeSpan.FromSeconds(3));
             }
         }
 
@@ -225,61 +257,11 @@ namespace MiDrop.Helper.Forms
         {
             base.OnClosed(e);
 
+            DragDropListener.DragDropStarted -= OnSystemDragDropStarted;
+            DragDropListener.DragDropStopped -= OnSystemDragDropStopped;
+
             desktopWindowTarget?.Dispose();
             desktopWindowTarget = null;
-        }
-
-        private void PlayFlashAnimation(TimeSpan duration)
-        {
-            if (!this.AllowDrop) return;
-
-            this.AllowDrop = false;
-            var shapeVisual = this.shapeVisual;
-            if (shapeVisual == null) return;
-
-            SetBounds(WindowWidth, WindowHeight + 8);
-
-            var shapeVisualOffset1 = GetShapeVisualOffset(false);
-            var shapeVisualOffset2 = shapeVisualOffset1;
-            shapeVisualOffset2.Y = -GeometryMaxHeight + WindowHeight + 8 - 1;
-
-            var firstShowOffsetAnimation = CompositionHelper.Compositor.CreateVector3KeyFrameAnimation();
-            firstShowOffsetAnimation.InsertKeyFrame(0, shapeVisualOffset1);
-            firstShowOffsetAnimation.InsertKeyFrame(0.1f, shapeVisualOffset2);
-            firstShowOffsetAnimation.InsertKeyFrame(0.9f, shapeVisualOffset2);
-            firstShowOffsetAnimation.InsertKeyFrame(1f, shapeVisualOffset1);
-            firstShowOffsetAnimation.Duration = duration;
-            firstShowOffsetAnimation.Target = "Offset";
-
-            var firstShowOpacityAnimation = CompositionHelper.Compositor.CreateScalarKeyFrameAnimation();
-            firstShowOpacityAnimation.InsertKeyFrame(0, 1);
-            firstShowOpacityAnimation.InsertKeyFrame(0.5f, 0.8f);
-            firstShowOpacityAnimation.InsertKeyFrame(1f, 1);
-            firstShowOpacityAnimation.Duration = duration / 3;
-            firstShowOpacityAnimation.IterationBehavior = AnimationIterationBehavior.Count;
-            firstShowOpacityAnimation.IterationCount = 3;
-            firstShowOpacityAnimation.Target = "Opacity";
-
-            var firstShowAnimationGroup = CompositionHelper.Compositor.CreateAnimationGroup();
-            firstShowAnimationGroup.Add(firstShowOffsetAnimation);
-            firstShowAnimationGroup.Add(firstShowOpacityAnimation);
-
-            var batch = CompositionHelper.Compositor.CreateScopedBatch(CompositionBatchTypes.Animation);
-            shapeVisual.StartAnimationGroup(firstShowAnimationGroup);
-            batch.Completed += (_, _) =>
-            {
-                shapeVisual.Offset = shapeVisualOffset1;
-                this.InvokeAsync(() =>
-                {
-                    if (!this.IsDisposed)
-                    {
-                        SetBounds(WindowWidth, WindowHeight);
-                        this.AllowDrop = true;
-                    }
-                });
-            };
-            batch.End();
-
         }
 
         #endregion Window Lifetime
@@ -311,18 +293,9 @@ namespace MiDrop.Helper.Forms
                     RenderMode = ToolStripRenderMode.System,
                 },
             };
-            notifyIcon.MouseClick += OnNotifyIconMouseClick;
             notifyIcon.DoubleClick += OnNotifyIconDoubleClick;
             UpdateNotifyIcon();
             notifyIcon.Visible = true;
-
-            void OnNotifyIconMouseClick(object? sender, MouseEventArgs e)
-            {
-                if (e.Button == MouseButtons.Left)
-                {
-                    PlayFlashAnimation(TimeSpan.FromSeconds(2));
-                }
-            }
 
             async void OnNotifyIconDoubleClick(object? sender, EventArgs e)
             {
@@ -379,10 +352,22 @@ namespace MiDrop.Helper.Forms
 
         #endregion Notify Icon
 
-        private static System.Numerics.Vector3 GetShapeVisualOffset(bool isDragOver)
+        private static System.Numerics.Vector3 GetShapeVisualOffset(ShapeVisualState shapeVisualState)
         {
-            var height = isDragOver ? GeometryDragOverHeight : GeometryNormalHeight;
+            var height = shapeVisualState switch
+            {
+                ShapeVisualState.Tip => GeometryTipHeight,
+                ShapeVisualState.DragOver => GeometryDragOverHeight,
+                _ => GeometryHiddenHeight,
+            };
             return new System.Numerics.Vector3((WindowWidth - GeometryWidth) / 2, -GeometryMaxHeight + height, 0);
+        }
+
+        private enum ShapeVisualState
+        {
+            Hidden,
+            Tip,
+            DragOver
         }
 
         private void UpdateRootVisualSize()

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Drawing.Printing;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -22,16 +23,27 @@ namespace MiDrop.Helper.Utils
         {
             if (Interlocked.Exchange(ref initialized, 1) != 0) return;
 
-            WinEventHelper.DispatcherQueue.TryEnqueue(() =>
+            WinEventHelper.DispatcherQueue.TryEnqueue(async () =>
             {
                 var toast = FindCameraErrorToast();
                 if (toast != 0)
                 {
-                    WindowHelper.HideWindow(toast);
+                    CloseCameraErrorToast(toast);
                 }
 
                 winEventHelper = new WinEventHelper(Windows.Win32.PInvoke.EVENT_OBJECT_CREATE);
                 winEventHelper.WinEventReceived += WinEventHelper_WinEventReceived;
+
+                for (int i = 0; i < 10 && toast == 0; i++)
+                {
+                    await Task.Delay(1 * 1000);
+
+                    toast = FindCameraErrorToast();
+                    if (toast != 0)
+                    {
+                        CloseCameraErrorToast(toast);
+                    }
+                }
             });
         }
 
@@ -47,7 +59,7 @@ namespace MiDrop.Helper.Utils
                         await Task.Delay(1000);
                         if (IsCameraErrorToast(args.Hwnd))
                         {
-                            WindowHelper.HideWindow(args.Hwnd);
+                            CloseCameraErrorToast(args.Hwnd);
                         }
                     });
                 }
@@ -75,9 +87,18 @@ namespace MiDrop.Helper.Utils
 
         public unsafe static bool IsCameraErrorToast(nint hWnd)
         {
-            return WindowHelper.GetClassName(hWnd) == "WinUIDesktopWin32WindowClass"
-                && CheckProcessName((HWND)hWnd)
-                && CheckWindowContent((HWND)hWnd);
+            Windows.Win32.UI.Accessibility.IAccessible* accessable = null;
+
+            try
+            {
+                return WindowHelper.GetClassName(hWnd) == "WinUIDesktopWin32WindowClass"
+                    && CheckProcessName((HWND)hWnd)
+                    && (accessable = SearchTextElementInWindow((HWND)hWnd, "相机协同异常", StringComparison.OrdinalIgnoreCase)) != null;
+            }
+            finally
+            {
+                if (accessable != null) accessable->Release();
+            }
 
             static unsafe bool CheckProcessName(HWND hWnd)
             {
@@ -124,41 +145,57 @@ namespace MiDrop.Helper.Utils
 
                 return false;
             }
+        }
 
-            static unsafe bool CheckWindowContent(HWND hWnd)
+        private unsafe static bool CloseCameraErrorToast(nint hWnd)
+        {
+            Windows.Win32.UI.Accessibility.IAccessible* accessable = null;
+
+            try
             {
-                fixed (Guid* riid = &Windows.Win32.UI.Accessibility.IAccessible.IID_Guid)
+                accessable = SearchTextElementInWindow((HWND)hWnd, "知道了", StringComparison.OrdinalIgnoreCase);
+                if (accessable != null)
                 {
-                    Windows.Win32.UI.Accessibility.IAccessible* root = null;
-                    Windows.Win32.UI.Accessibility.IAccessible* text = null;
-
-                    try
-                    {
-
-                        var hr = Windows.Win32.PInvoke.AccessibleObjectFromWindow(
-                            hWnd,
-                            (uint)Windows.Win32.UI.WindowsAndMessaging.OBJECT_IDENTIFIER.OBJID_WINDOW,
-                            riid,
-                            (void**)&root);
-
-                        if (hr.Succeeded)
-                        {
-                            text = SearchTextElement(root, "相机协同异常", StringComparison.OrdinalIgnoreCase);
-                            if (text != null)
-                            {
-                                return true;
-                            }
-                        }
-                    }
-                    finally
-                    {
-                        if (text != null) text->Release();
-                        if (root != null) root->Release();
-                    }
+                    var variant = default(VARIANT);
+                    variant.Anonymous.Anonymous.vt = VARENUM.VT_I4;
+                    variant.Anonymous.Anonymous.Anonymous.lVal = (int)Windows.Win32.PInvoke.CHILDID_SELF;
+                    return accessable->accDoDefaultAction(variant).Succeeded;
                 }
-
                 return false;
             }
+            finally
+            {
+                if (accessable != null) accessable->Release();
+            }
+        }
+
+        private static unsafe Windows.Win32.UI.Accessibility.IAccessible* SearchTextElementInWindow(HWND hWnd, string searchText, StringComparison stringComparison)
+        {
+            fixed (Guid* riid = &Windows.Win32.UI.Accessibility.IAccessible.IID_Guid)
+            {
+                Windows.Win32.UI.Accessibility.IAccessible* root = null;
+
+                try
+                {
+                    var hr = Windows.Win32.PInvoke.AccessibleObjectFromWindow(
+                        hWnd,
+                        (uint)Windows.Win32.UI.WindowsAndMessaging.OBJECT_IDENTIFIER.OBJID_WINDOW,
+                        riid,
+                        (void**)&root);
+
+                    if (hr.Succeeded)
+                    {
+                        return SearchTextElement(root, searchText, stringComparison);
+                    }
+                }
+                finally
+                {
+                    if (root != null) root->Release();
+                }
+            }
+
+            return null;
+
 
             static unsafe Windows.Win32.UI.Accessibility.IAccessible* SearchTextElement(Windows.Win32.UI.Accessibility.IAccessible* root, string searchText, StringComparison stringComparison)
             {
@@ -173,11 +210,8 @@ namespace MiDrop.Helper.Utils
 
                             try
                             {
-
-
                                 for (int i = 0; i < span.Length; i++)
                                 {
-                                    Windows.Win32.PInvoke.VariantInit(out var variant);
                                     Windows.Win32.SysFreeStringSafeHandle? name = null;
                                     Windows.Win32.System.Com.IDispatch* dispatch = null;
                                     Windows.Win32.UI.Accessibility.IAccessible* childAccessible = null;
@@ -198,6 +232,7 @@ namespace MiDrop.Helper.Utils
 
                                         if (dispatch != null && dispatch->QueryInterface(riid, (void**)&childAccessible).Succeeded)
                                         {
+                                            var variant = default(VARIANT);
                                             variant.Anonymous.Anonymous.vt = VARENUM.VT_I4;
                                             variant.Anonymous.Anonymous.Anonymous.lVal = i;
 
@@ -207,13 +242,15 @@ namespace MiDrop.Helper.Utils
                                                 var roleValue = role.Anonymous.Anonymous.Anonymous.lVal;
 
                                                 if (roleValue == Windows.Win32.PInvoke.ROLE_SYSTEM_STATICTEXT
-                                                    || roleValue == Windows.Win32.PInvoke.ROLE_SYSTEM_TEXT)
+                                                    || roleValue == Windows.Win32.PInvoke.ROLE_SYSTEM_TEXT
+                                                    || roleValue == Windows.Win32.PInvoke.ROLE_SYSTEM_PUSHBUTTON)
                                                 {
                                                     variant.Anonymous.Anonymous.Anonymous.lVal = (int)Windows.Win32.PInvoke.CHILDID_SELF;
 
                                                     HRESULT hr = default;
 
-                                                    if (roleValue == Windows.Win32.PInvoke.ROLE_SYSTEM_STATICTEXT)
+                                                    if (roleValue == Windows.Win32.PInvoke.ROLE_SYSTEM_STATICTEXT
+                                                        || roleValue == Windows.Win32.PInvoke.ROLE_SYSTEM_PUSHBUTTON)
                                                     {
                                                         hr = childAccessible->get_accName(variant, out name);
                                                     }
@@ -245,7 +282,6 @@ namespace MiDrop.Helper.Utils
                                     {
                                         name?.Dispose();
                                         if (childAccessible != null) childAccessible->Release();
-                                        Windows.Win32.PInvoke.VariantClear(&variant);
                                     }
                                 }
                             }

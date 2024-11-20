@@ -1,5 +1,6 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using MiDrop.Helper.Forms;
+using MiDrop.Helper.Utils;
 using System;
 using System.CommandLine;
 using System.IO.MemoryMappedFiles;
@@ -42,6 +43,8 @@ public static class Program
             Application.SetHighDpiMode(HighDpiMode.PerMonitorV2);
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+
+            XiaomiPcManagerToastListener.Initialize();
 
             Application.Run(new MainForm());
         }

@@ -110,7 +110,7 @@ namespace MiDrop.Helper.Utils
             {
                 if (Windows.Win32.PInvoke.IsWindow((HWND)args.Hwnd))
                 {
-                    var className = GetClassName(args.Hwnd);
+                    var className = WindowHelper.GetClassName(args.Hwnd);
                     if (DragVisualWindowClassNames.Contains(className))
                     {
                         isDragging = true;
@@ -170,14 +170,6 @@ namespace MiDrop.Helper.Utils
                     }
                 }
             }
-        }
-
-        private static unsafe string? GetClassName(nint hWnd)
-        {
-            var buffer = stackalloc char[255];
-            var count = Windows.Win32.PInvoke.GetClassName((HWND)hWnd, buffer, 255);
-            if (count > 0) return new string(buffer, 0, count);
-            return null;
         }
     }
 }

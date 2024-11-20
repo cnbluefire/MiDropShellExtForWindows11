@@ -18,7 +18,7 @@ using WINDOW_EX_STYLE = Windows.Win32.UI.WindowsAndMessaging.WINDOW_EX_STYLE;
 
 namespace MiDrop.Helper.Forms
 {
-    public class MainForm : Form
+    public partial class MainForm : Form
     {
         private const int WindowWidth = 120;
         private const int WindowHeight = 12;
@@ -27,7 +27,7 @@ namespace MiDrop.Helper.Forms
         private const float GeometryMaxHeight = 40;
         private const float GeometryWidth = GeometryMaxWidth;
         private const float GeometryHiddenHeight = 0;
-        private const float GeometryTipHeight = WindowHeight - 6;
+        private const float GeometryTipHeight = WindowHeight - 8;
         private const float GeometryDragOverHeight = WindowHeight - 2;
 
         private DesktopWindowTarget? desktopWindowTarget;

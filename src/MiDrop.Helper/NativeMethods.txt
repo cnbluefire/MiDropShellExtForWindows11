@@ -15,6 +15,14 @@ UnhookWinEvent
 GetClassNameW
 FindWindowExW
 SetWindowDisplayAffinity
+GetWindowThreadProcessId
+OpenProcess
+QueryFullProcessImageNameW
+AccessibleObjectFromWindow
+VariantInit
+VariantClear
+EnumWindows
+AccessibleChildren
 
 PACKAGE_INFO
 FILEGROUPDESCRIPTORW
@@ -30,6 +38,8 @@ WINEVENT_OUTOFCONTEXT
 WINEVENT_SKIPOWNPROCESS
 WINEVENT_SKIPOWNTHREAD
 OBJECT_IDENTIFIER
+CHILDID_SELF
+ROLE_SYSTEM_*
 
 ICompositorDesktopInterop
-IDataObject
+IAccessible

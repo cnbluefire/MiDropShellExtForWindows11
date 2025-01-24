@@ -92,13 +92,14 @@ namespace MiDrop.Helper.Utils
             try
             {
                 return WindowHelper.GetClassName(hWnd) == "WinUIDesktopWin32WindowClass"
-                    && CheckProcessName((HWND)hWnd)
-                    && (accessable = SearchTextElementInWindow((HWND)hWnd, "相机协同异常", StringComparison.OrdinalIgnoreCase)) != null;
-            }
+                && CheckProcessName((HWND)hWnd)
+                && (accessable = SearchTextElementInWindow((HWND)hWnd, "请确认摄像头状态", StringComparison.OrdinalIgnoreCase)) != null
+                && SearchTextElementInWindow((HWND)hWnd, "摄像头暂不可用", StringComparison.OrdinalIgnoreCase) != null;
+              }
             finally
-            {
+              {
                 if (accessable != null) accessable->Release();
-            }
+             }
 
             static unsafe bool CheckProcessName(HWND hWnd)
             {
@@ -151,19 +152,25 @@ namespace MiDrop.Helper.Utils
         {
             Windows.Win32.UI.Accessibility.IAccessible* accessable = null;
 
-            try
+           try
+        {
+            // 尝试查找右上角的 “×” 按钮
+            accessable = SearchTextElementInWindow((HWND)hWnd, "关闭", StringComparison.OrdinalIgnoreCase);
+            if (accessable != null)
             {
-                accessable = SearchTextElementInWindow((HWND)hWnd, "知道了", StringComparison.OrdinalIgnoreCase);
-                if (accessable != null)
-                {
-                    var variant = default(VARIANT);
-                    variant.Anonymous.Anonymous.vt = VARENUM.VT_I4;
-                    variant.Anonymous.Anonymous.Anonymous.lVal = (int)Windows.Win32.PInvoke.CHILDID_SELF;
-                    return accessable->accDoDefaultAction(variant).Succeeded;
-                }
-                return false;
+                var variant = default(VARIANT);
+                variant.Anonymous.Anonymous.vt = VARENUM.VT_I4;
+                variant.Anonymous.Anonymous.Anonymous.lVal = (int)Windows.Win32.PInvoke.CHILDID_SELF;
+                return accessable->accDoDefaultAction(variant).Succeeded;
             }
-            finally
+
+            // 如果没有找到 “×” 按钮，尝试其他关闭方法
+            return false;
+        }
+        finally
+        {
+            if (accessable != null) accessable->Release();
+        }
             {
                 if (accessable != null) accessable->Release();
             }

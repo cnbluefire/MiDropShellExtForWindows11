@@ -12,6 +12,7 @@ using Windows.Win32.Foundation;
 using Windows.Win32.System.Variant;
 using WinRT.Interop;
 
+
 namespace MiDrop.Helper.Utils
 {
     internal static class XiaomiPcManagerToastListener
@@ -29,7 +30,9 @@ namespace MiDrop.Helper.Utils
                 if (toast != 0)
                 {
                     CloseCameraErrorToast(toast);
+
                 }
+
 
                 winEventHelper = new WinEventHelper(Windows.Win32.PInvoke.EVENT_OBJECT_CREATE);
                 winEventHelper.WinEventReceived += WinEventHelper_WinEventReceived;
@@ -93,7 +96,7 @@ namespace MiDrop.Helper.Utils
             {
                 return WindowHelper.GetClassName(hWnd) == "WinUIDesktopWin32WindowClass"
                     && CheckProcessName((HWND)hWnd)
-                    && (accessable = SearchTextElementInWindow((HWND)hWnd, "相机协同异常", StringComparison.OrdinalIgnoreCase)) != null;
+                    && ((accessable = SearchTextElementInWindow((HWND)hWnd, "相机协同异常", StringComparison.OrdinalIgnoreCase)) != null | (accessable = SearchTextElementInWindow((HWND)hWnd, "请确认摄像头状态", StringComparison.OrdinalIgnoreCase)) != null);
             }
             finally
             {
@@ -149,23 +152,34 @@ namespace MiDrop.Helper.Utils
 
         private unsafe static bool CloseCameraErrorToast(nint hWnd)
         {
-            Windows.Win32.UI.Accessibility.IAccessible* accessable = null;
+            string[] buttonTextVariants = { "知道了", "确定" };
 
+            Windows.Win32.UI.Accessibility.IAccessible* accessible = null;
             try
             {
-                accessable = SearchTextElementInWindow((HWND)hWnd, "知道了", StringComparison.OrdinalIgnoreCase);
-                if (accessable != null)
+                foreach (string buttonText in buttonTextVariants)
                 {
-                    var variant = default(VARIANT);
-                    variant.Anonymous.Anonymous.vt = VARENUM.VT_I4;
-                    variant.Anonymous.Anonymous.Anonymous.lVal = (int)Windows.Win32.PInvoke.CHILDID_SELF;
-                    return accessable->accDoDefaultAction(variant).Succeeded;
+                    accessible = SearchTextElementInWindow((HWND)hWnd, buttonText, StringComparison.OrdinalIgnoreCase);
+                    if (accessible != null)
+                    {
+                        //var variant = default(VARIANT);
+                        //variant.Anonymous.Anonymous.vt = VARENUM.VT_I4;
+                        //variant.Anonymous.Anonymous.Anonymous.lVal = (int)Windows.Win32.PInvoke.CHILDID_SELF;
+
+                        //bool result = accessible->accDoDefaultAction(variant).Succeeded;
+                        //accessible->Release();
+                        //accessible = null;
+                        return CloseWindowByHandle(hWnd);
+
+                    }
                 }
+
                 return false;
             }
             finally
             {
-                if (accessable != null) accessable->Release();
+                if (accessible != null)
+                    accessible->Release();
             }
         }
 
@@ -301,5 +315,22 @@ namespace MiDrop.Helper.Utils
                 return null;
             }
         }
+
+
+        // 使用句柄关闭窗口
+        public const int WM_CLOSE = 0x0010;
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+
+        private static bool CloseWindowByHandle(IntPtr hWnd)
+        {
+            if (hWnd == IntPtr.Zero)
+            {
+                return false;
+            }
+            IntPtr result = SendMessage(hWnd, WM_CLOSE, IntPtr.Zero, IntPtr.Zero);
+            return result != IntPtr.Zero;
+        }
+
     }
 }

@@ -13,8 +13,8 @@
 
 	<Identity
 	  Name="5f71dad9-3e77-4ada-9fad-12c2e761288f"
-	  Publisher="CN=blue-fire"
-	  Version="1.0.5.0" />
+	  Publisher="CN=cnbluefire"
+	  Version="1.0.6.0" />
 
 	<Properties>
 		<DisplayName>MiDrop Helper</DisplayName>
@@ -32,9 +32,23 @@
 	</Resources>
 
 	<Applications>
+		<Application Id="Placeholder"
+		  Executable="MiDrop.Helper\MiDrop.Helper.exe"
+		  EntryPoint="windows.fullTrustApplication">
+			<uap:VisualElements
+			  DisplayName="使用小米互传发送"
+			  Description="使用小米互传发送"
+			  BackgroundColor="transparent"
+			  Square150x150Logo="Images\Square150x150Logo.png"
+			  Square44x44Logo="Images\Square44x44Logo.png">
+				<uap:DefaultTile Wide310x150Logo="Images\Wide310x150Logo.png" />
+				<uap:SplashScreen Image="Images\SplashScreen.png" />
+			</uap:VisualElements>
+		</Application>
+		
 		<Application Id="App"
-		  Executable="$targetnametoken$.exe"
-		  EntryPoint="$targetentrypoint$">
+		  Executable="MiDrop.Helper\MiDrop.Helper.exe"
+		  EntryPoint="windows.fullTrustApplication">
 			<uap:VisualElements
 			  DisplayName="小米互传"
 			  Description="小米互传"

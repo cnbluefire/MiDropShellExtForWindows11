@@ -66,7 +66,40 @@ public static class Program
                 {
                     shareOperation.ReportCompleted();
                 }
+
+                return;
+            }
+
+            var aumid = GetCurrentApplicationUserModelId();
+            if (aumid?.EndsWith("!Placeholder") is true)
+            {
+                await MiDrop.Core.XiaomiPcManagerHelper.LaunchAsync("open_controlcenter", default);
             }
         }
+
+    }
+
+
+    [DllImport("Kernel32.dll")]
+    private unsafe static extern int GetCurrentApplicationUserModelId(uint* applicationUserModelIdLength, char* applicationUserModelId);
+
+    private unsafe static string? GetCurrentApplicationUserModelId()
+    {
+        const int ERROR_INSUFFICIENT_BUFFER = 122;
+
+        uint length = 0;
+
+        var error = GetCurrentApplicationUserModelId(&length, null);
+        if (error == ERROR_INSUFFICIENT_BUFFER && length > 0)
+        {
+            char* buffer = stackalloc char[(int)length];
+            error = GetCurrentApplicationUserModelId(&length, buffer);
+
+            if (error == 0 && length > 1)
+            {
+                return new string(buffer, 0, (int)length - 1);
+            }
+        }
+        return null;
     }
 }

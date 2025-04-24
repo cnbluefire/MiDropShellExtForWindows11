@@ -1,21 +1,23 @@
 ﻿// See https://aka.ms/new-console-template for more information
-using MiDrop.Helper.Forms;
-using MiDrop.Helper.Utils;
+using Microsoft.Win32;
+using MiDrop.Core;
 using System;
 using System.CommandLine;
 using System.IO.MemoryMappedFiles;
 using System.Runtime.InteropServices;
 using System.Text;
+using Windows.ApplicationModel;
+using Windows.ApplicationModel.Activation;
+using Windows.ApplicationModel.DataTransfer;
 
 namespace MiDrop.Helper;
 
 public static class Program
 {
-    private static Mutex? mutex;
-
-    [STAThread]
-    public static void Main(string[] args)
+    public static async Task Main(string[] args)
     {
+        bool hasCommandLineArgs = false;
+
         var fileOptions = new Option<string>("--share-files");
         var rootCommand = new Command("MiDropShellExtHelper");
         rootCommand.AddOption(fileOptions);
@@ -23,30 +25,48 @@ public static class Program
         {
             if (!string.IsNullOrEmpty(file))
             {
+                hasCommandLineArgs = true;
+
                 await MiDrop.Core.XiaomiPcManagerHelper.LaunchAsync(default);
                 await MiDrop.Core.XiaomiPcManagerHelper.SendCachedFilesAsync(file, TimeSpan.FromSeconds(5));
             }
         }, fileOptions);
-        rootCommand.Invoke(args);
+        await rootCommand.InvokeAsync(args);
 
-        using (mutex = new Mutex(true, "395FE0E2-7A4C-4A17-A59F-FF99BBC55390", out var createdNew))
+        if (!hasCommandLineArgs)
         {
-            if (!createdNew)
+            var activatedEventArgs = AppInstance.GetActivatedEventArgs();
+            if (activatedEventArgs.Kind == Windows.ApplicationModel.Activation.ActivationKind.ShareTarget)
             {
-                // not first instance, return
-                return;
+                var sharedTargetActivatedEventArgs = (ShareTargetActivatedEventArgs)activatedEventArgs;
+                var shareOperation = sharedTargetActivatedEventArgs.ShareOperation;
+
+                shareOperation.ReportStarted();
+                try
+                {
+                    var dataPackageView = shareOperation.Data;
+
+                    if (dataPackageView.Contains(StandardDataFormats.StorageItems))
+                    {
+                        var items = await dataPackageView.GetStorageItemsAsync();
+                        var itemsPathList = items
+                            .Select(c => c.Path)
+                            .Where(c => File.Exists(c) || Directory.Exists(c))
+                            .ToArray();
+
+                        if (itemsPathList != null && itemsPathList.Length > 0)
+                        {
+                            var key = MiDrop.Core.FilesHelper.SaveFilesAsync(itemsPathList, default).Result;
+                            await MiDrop.Core.XiaomiPcManagerHelper.LaunchAsync(default);
+                            await MiDrop.Core.XiaomiPcManagerHelper.SendCachedFilesAsync(key, TimeSpan.FromSeconds(5));
+                        }
+                    }
+                }
+                finally
+                {
+                    shareOperation.ReportCompleted();
+                }
             }
-
-            var installPath = MiDrop.Core.XiaomiPcManagerHelper.GetXiaomiPcManagerInstallPath();
-            if (string.IsNullOrEmpty(installPath)) return;
-
-            Application.SetHighDpiMode(HighDpiMode.PerMonitorV2);
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-
-            XiaomiPcManagerToastListener.Initialize();
-
-            Application.Run(new MainForm());
         }
     }
 }

@@ -7,7 +7,7 @@
   xmlns:rescap5="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities/5"
   xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
   xmlns:desktop4="http://schemas.microsoft.com/appx/manifest/desktop/windows10/4"
-  xmlns:desktop5="http://schemas.microsoft.com/appx/manifest/desktop/windows10/5"
+  xmlns:desktop5="http://schemas.microsoft.com/appx/manifest/desktop/windows10/5"  
   xmlns:com="http://schemas.microsoft.com/appx/manifest/com/windows10"
   IgnorableNamespaces="uap rescap rescap5 desktop desktop4 desktop5 com">
 
@@ -36,8 +36,8 @@
 		  Executable="$targetnametoken$.exe"
 		  EntryPoint="$targetentrypoint$">
 			<uap:VisualElements
-			  DisplayName="MiDrop Helper"
-			  Description="MiDrop Helper"
+			  DisplayName="小米互传"
+			  Description="小米互传"
 			  BackgroundColor="transparent"
 			  Square150x150Logo="Images\Square150x150Logo.png"
 			  Square44x44Logo="Images\Square44x44Logo.png"
@@ -46,9 +46,6 @@
 				<uap:SplashScreen Image="Images\SplashScreen.png" />
 			</uap:VisualElements>
 			<Extensions>
-				<desktop:Extension Category="windows.startupTask" Executable="MiDrop.Helper\MiDrop.Helper.exe" EntryPoint="Windows.FullTrustApplication">
-					<desktop:StartupTask DisplayName="MiDrop.Helper" Enabled="true" TaskId="MiDrop.Helper" rescap5:ImmediateRegistration="true"/>
-				</desktop:Extension>
 				<com:Extension Category="windows.comServer">
 					<com:ComServer>
 						<com:SurrogateServer DisplayName="MiDropShellExt">
@@ -66,6 +63,15 @@
 						</desktop5:ItemType>
 					</desktop4:FileExplorerContextMenus>
 				</desktop4:Extension>
+				<uap:Extension Category="windows.shareTarget">
+					<uap:ShareTarget Description="使用小米互传发送">
+						<uap:SupportedFileTypes>
+							<uap:SupportsAnyFileType />
+						</uap:SupportedFileTypes>
+						<uap:DataFormat>Bitmap</uap:DataFormat>
+						<uap:DataFormat>StorageItems</uap:DataFormat>
+					</uap:ShareTarget>
+				</uap:Extension>
 			</Extensions>
 		</Application>
 	</Applications>

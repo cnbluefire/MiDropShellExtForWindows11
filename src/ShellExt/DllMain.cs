@@ -1,4 +1,5 @@
 ﻿using Microsoft.Win32;
+using MiDrop.Core;
 using ShellExtensions;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -18,13 +19,10 @@ namespace ShellExt
         {
             try
             {
-                using (var subKey = Registry.ClassesRoot.OpenSubKey("CLSID\\{1bca9901-05c3-4d01-8ad4-78da2eac9b3f}\\InprocServer32"))
+                var folder = XiaomiPcManagerHelper.GetXiaomiPcManagerInstallPath();
+                if (Directory.Exists(folder))
                 {
-                    if (subKey != null && subKey.GetValue(null) is string path && !string.IsNullOrEmpty(path))
-                    {
-                        var folder = Path.GetDirectoryName(path);
-                        ShellExtensions.ShellExtensionsClassFactory.RegisterInProcess(PackagedClsid, () => new ContextMenu(folder!));
-                    }
+                    ShellExtensions.ShellExtensionsClassFactory.RegisterInProcess(PackagedClsid, () => new ContextMenu(folder!));
                 }
             }
             catch { }

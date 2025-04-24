@@ -8,18 +8,29 @@ namespace MiDrop.Core;
 
 public class XiaomiPcManagerHelper
 {
+    private static readonly IReadOnlyList<string> PcManagerRegKeys = [
+        // 5.x
+        "{504d69c0-cb52-48df-b5b5-7161829fabc8}",
+        
+        // 4.x
+        "{1bca9901-05c3-4d01-8ad4-78da2eac9b3f}",
+        ];
+
     public static string GetXiaomiPcManagerInstallPath()
     {
         try
         {
-            using (var subKey = Registry.ClassesRoot.OpenSubKey("CLSID\\{1bca9901-05c3-4d01-8ad4-78da2eac9b3f}\\InprocServer32"))
+            for (int i = 0; i < PcManagerRegKeys.Count; i++)
             {
-                if (subKey != null && subKey.GetValue(null) is string path && !string.IsNullOrEmpty(path))
+                using (var subKey = Registry.ClassesRoot.OpenSubKey($"CLSID\\{PcManagerRegKeys[i]}\\InprocServer32"))
                 {
-                    var folder = Path.GetDirectoryName(path);
-                    if (Directory.Exists(folder))
+                    if (subKey != null && subKey.GetValue(null) is string path && !string.IsNullOrEmpty(path))
                     {
-                        return folder;
+                        var folder = Path.GetDirectoryName(path);
+                        if (Directory.Exists(folder))
+                        {
+                            return folder;
+                        }
                     }
                 }
             }

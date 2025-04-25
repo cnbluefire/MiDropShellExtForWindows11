@@ -14,7 +14,7 @@
 	<Identity
 	  Name="5f71dad9-3e77-4ada-9fad-12c2e761288f"
 	  Publisher="CN=cnbluefire"
-	  Version="1.0.6.0" />
+	  Version="1.0.7.0" />
 
 	<Properties>
 		<DisplayName>MiDrop Helper</DisplayName>

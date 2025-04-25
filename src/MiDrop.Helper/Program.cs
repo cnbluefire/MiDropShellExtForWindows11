@@ -9,6 +9,7 @@ using System.Text;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.ApplicationModel.DataTransfer;
+using WinRT;
 
 namespace MiDrop.Helper;
 
@@ -38,7 +39,7 @@ public static class Program
             var activatedEventArgs = AppInstance.GetActivatedEventArgs();
             if (activatedEventArgs.Kind == Windows.ApplicationModel.Activation.ActivationKind.ShareTarget)
             {
-                var sharedTargetActivatedEventArgs = (ShareTargetActivatedEventArgs)activatedEventArgs;
+                var sharedTargetActivatedEventArgs = activatedEventArgs.As<ShareTargetActivatedEventArgs>();
                 var shareOperation = sharedTargetActivatedEventArgs.ShareOperation;
 
                 shareOperation.ReportStarted();

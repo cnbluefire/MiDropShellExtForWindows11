@@ -10,7 +10,9 @@ namespace ShellExt
 {
     public static class DllMain
     {
-        private static readonly Guid PackagedClsid = new Guid("976D43D8-907F-46AF-B47F-07084C71A2F0");
+        private static readonly Guid PackagedClsid1 = new Guid("976D43D8-907F-46AF-B47F-07084C71A2F0");
+        private static readonly Guid PackagedClsid2 = new Guid("3EE2A0FD-EA1B-4630-9972-02F51EC786FF");
+        private static readonly Guid PackagedClsid3 = new Guid("3FA37C0D-64B9-4E51-A9DF-411647E9DE79");
 
 #pragma warning disable CA2255
         [ModuleInitializer]
@@ -19,10 +21,45 @@ namespace ShellExt
         {
             try
             {
-                var folder = XiaomiPcManagerHelper.GetXiaomiPcManagerInstallPath();
+                var folder1 = XiaomiPcManagerHelper.GetInstallPath();
+                if (Directory.Exists(folder1))
+                {
+                    ShellExtensions.ShellExtensionsClassFactory.RegisterInProcess(
+                        PackagedClsid1,
+                        () => new ContextMenu(
+                            "XiaomiShare",
+                            Path.Combine(folder1, "XiaomiPcManager.exe,-32512"),
+                            "使用小米互传发送"));
+                }
+            }
+            catch { }
+
+            try
+            {
+                var folder = HonorPCManagerHelper.GetInstallPath();
                 if (Directory.Exists(folder))
                 {
-                    ShellExtensions.ShellExtensionsClassFactory.RegisterInProcess(PackagedClsid, () => new ContextMenu(folder!));
+                    ShellExtensions.ShellExtensionsClassFactory.RegisterInProcess(
+                        PackagedClsid2,
+                        () => new ContextMenu(
+                            "HonorShare",
+                            Path.GetFullPath(Path.Combine(DllModule.BaseDirectory, "..", "HonorImages", "Share.ico")),
+                            "使用荣耀分享发送"));
+                }
+            }
+            catch { }
+
+            try
+            {
+                var folder = HuaweiPCManagerHelper.GetInstallPath();
+                if (Directory.Exists(folder))
+                {
+                    ShellExtensions.ShellExtensionsClassFactory.RegisterInProcess(
+                        PackagedClsid1,
+                        () => new ContextMenu(
+                            "HuaweiShare",
+                            Path.GetFullPath(Path.Combine(DllModule.BaseDirectory, "..", "HuaweiImages", "Share.ico")),
+                            "使用华为分享发送"));
                 }
             }
             catch { }
@@ -34,7 +71,7 @@ namespace ShellExt
         [UnmanagedCallersOnly(EntryPoint = "DllGetClassObject")]
         private unsafe static int DllGetClassObject(Guid* clsid, Guid* riid, void** ppv) => ShellExtensions.ShellExtensionsClassFactory.DllGetClassObject(clsid, riid, ppv);
 
-        public static unsafe void SendToXiaomiPcManager(string[] files)
+        public static unsafe void StartShare(string target, string[] files)
         {
             var installLocation = PackageProperties.Current?.PackageInstallLocation;
             if (!string.IsNullOrEmpty(installLocation))
@@ -47,7 +84,7 @@ namespace ShellExt
                     {
                         try
                         {
-                            Process.Start(helperExecute, $"--share-files {key}");
+                            Process.Start(helperExecute, $"--target {target} --share-files {key}");
                         }
                         catch { }
                     }

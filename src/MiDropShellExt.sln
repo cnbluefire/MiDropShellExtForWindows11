@@ -11,6 +11,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShellExt", "ShellExt\ShellE
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiDrop.Core", "MiDrop.Core\MiDrop.Core.csproj", "{E659F239-7FF9-4394-9015-8137FBBBB576}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PackageProjects", "PackageProjects", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Application", "Application", "{192CB46B-EFC7-4495-9EF5-E4D0BC52771D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -38,6 +42,12 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{338A92EA-3827-4B63-870B-A6FDA0B902E5} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{20AB2056-2FFB-48B3-9E1F-C61EDEA677CD} = {192CB46B-EFC7-4495-9EF5-E4D0BC52771D}
+		{F2683AA5-554F-4E5E-A2A7-181443A36A58} = {192CB46B-EFC7-4495-9EF5-E4D0BC52771D}
+		{E659F239-7FF9-4394-9015-8137FBBBB576} = {192CB46B-EFC7-4495-9EF5-E4D0BC52771D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {91E393C5-B663-4753-B603-8D52ED3A13DF}

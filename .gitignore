@@ -331,3 +331,10 @@ ASALocalRun/
 .mfractor/
 
 /src/MiDropShellExt.Package/ShellExt
+/src/MiDrop.Core/NonPackagedApp
+/src/MiDrop.Helper/NonPackagedApp
+/src/MiDrop.Helper/NonPackagedAppnative
+/src/MiDropShellExt.Package/NonPackagedApp
+/src/Build/XiaomiShare/
+/src/Build/HonorShare/
+/src/Build/HuaweiShare/

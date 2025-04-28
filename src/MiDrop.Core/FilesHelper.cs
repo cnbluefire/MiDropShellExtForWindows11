@@ -56,6 +56,13 @@ namespace MiDrop.Core
             return string.Empty;
         }
 
+        public static string[] GetFilesFromXiaomiFileContent(string fileContent)
+        {
+            return fileContent.Split('|', StringSplitOptions.RemoveEmptyEntries)
+                .Where(c => File.Exists(c) || Directory.Exists(c))
+                .ToArray();
+        }
+
         private static void DeleteExpiredFiles()
         {
             try

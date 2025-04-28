@@ -12,14 +12,14 @@
   IgnorableNamespaces="uap rescap rescap5 desktop desktop4 desktop5 com">
 
 	<Identity
-	  Name="5f71dad9-3e77-4ada-9fad-12c2e761288f"
+	  Name="d18dc3bb-bc4e-433e-a9ed-e9bc1f26d7b9"
 	  Publisher="CN=cnbluefire"
-	  Version="1.0.7.0" />
+	  Version="1.0.8.0" />
 
 	<Properties>
-		<DisplayName>MiDrop Helper</DisplayName>
+		<DisplayName>HuaweiShare Helper</DisplayName>
 		<PublisherDisplayName>blue-fire</PublisherDisplayName>
-		<Logo>Images\StoreLogo.png</Logo>
+		<Logo>HuaweiImages\StoreLogo.png</Logo>
 	</Properties>
 
 	<Dependencies>
@@ -32,53 +32,53 @@
 	</Resources>
 
 	<Applications>
-		<Application Id="Placeholder"
+		<Application Id="HuaweiApp"
 		  Executable="MiDrop.Helper\MiDrop.Helper.exe"
 		  EntryPoint="windows.fullTrustApplication">
 			<uap:VisualElements
-			  DisplayName="使用小米互传发送"
-			  Description="使用小米互传发送"
+			  DisplayName="使用华为分享发送"
+			  Description="使用华为分享发送"
 			  BackgroundColor="transparent"
-			  Square150x150Logo="Images\Square150x150Logo.png"
-			  Square44x44Logo="Images\Square44x44Logo.png">
-				<uap:DefaultTile Wide310x150Logo="Images\Wide310x150Logo.png" />
-				<uap:SplashScreen Image="Images\SplashScreen.png" />
+			  Square150x150Logo="HuaweiImages\Square150x150Logo.png"
+			  Square44x44Logo="HuaweiImages\Square44x44Logo.png">
+				<uap:DefaultTile Wide310x150Logo="HuaweiImages\Wide310x150Logo.png" />
+				<uap:SplashScreen Image="HuaweiImages\SplashScreen.png" />
 			</uap:VisualElements>
 		</Application>
 		
-		<Application Id="App"
+		<Application Id="HuaweiShare"
 		  Executable="MiDrop.Helper\MiDrop.Helper.exe"
 		  EntryPoint="windows.fullTrustApplication">
 			<uap:VisualElements
-			  DisplayName="小米互传"
-			  Description="小米互传"
+			  DisplayName="华为分享"
+			  Description="华为分享"
 			  BackgroundColor="transparent"
-			  Square150x150Logo="Images\Square150x150Logo.png"
-			  Square44x44Logo="Images\Square44x44Logo.png"
+			  Square150x150Logo="HuaweiImages\Square150x150Logo.png"
+			  Square44x44Logo="HuaweiImages\Square44x44Logo.png"
 			  AppListEntry="none">
-				<uap:DefaultTile Wide310x150Logo="Images\Wide310x150Logo.png" />
-				<uap:SplashScreen Image="Images\SplashScreen.png" />
+				<uap:DefaultTile Wide310x150Logo="HuaweiImages\Wide310x150Logo.png" />
+				<uap:SplashScreen Image="HuaweiImages\SplashScreen.png" />
 			</uap:VisualElements>
 			<Extensions>
 				<com:Extension Category="windows.comServer">
 					<com:ComServer>
 						<com:SurrogateServer DisplayName="MiDropShellExt">
-							<com:Class Id="976D43D8-907F-46AF-B47F-07084C71A2F0" Path="ShellExt\ShellExt.dll" ThreadingModel="STA"/>
+							<com:Class Id="3FA37C0D-64B9-4E51-A9DF-411647E9DE79" Path="ShellExt\ShellExt.dll" ThreadingModel="STA"/>
 						</com:SurrogateServer>
 					</com:ComServer>
 				</com:Extension>
 				<desktop4:Extension Category="windows.fileExplorerContextMenus">
 					<desktop4:FileExplorerContextMenus>
 						<desktop4:ItemType Type="*">
-							<desktop4:Verb Id="CMiDropContextMenuExt" Clsid="976D43D8-907F-46AF-B47F-07084C71A2F0"/>
+							<desktop4:Verb Id="CMiDropContextMenuExt" Clsid="3FA37C0D-64B9-4E51-A9DF-411647E9DE79"/>
 						</desktop4:ItemType>
 						<desktop5:ItemType Type="Directory">
-							<desktop5:Verb Id="CMiDropContextMenuExt" Clsid="976D43D8-907F-46AF-B47F-07084C71A2F0"/>
+							<desktop5:Verb Id="CMiDropContextMenuExt" Clsid="3FA37C0D-64B9-4E51-A9DF-411647E9DE79"/>
 						</desktop5:ItemType>
 					</desktop4:FileExplorerContextMenus>
 				</desktop4:Extension>
 				<uap:Extension Category="windows.shareTarget">
-					<uap:ShareTarget Description="使用小米互传发送">
+					<uap:ShareTarget Description="使用华为分享发送">
 						<uap:SupportedFileTypes>
 							<uap:SupportsAnyFileType />
 						</uap:SupportedFileTypes>

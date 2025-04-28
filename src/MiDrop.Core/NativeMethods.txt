@@ -1,0 +1,14 @@
+﻿ILCreateFromPathW
+ILFree
+SHCreateShellItemArrayFromIDLists
+LoadLibraryExW
+GetProcAddress
+CreatePopupMenu
+DestroyMenu
+
+IDataObject
+IContextMenu
+IShellExtInit
+
+BHID_*
+CMF_NORMAL

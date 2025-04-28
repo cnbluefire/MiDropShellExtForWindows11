@@ -19,62 +19,105 @@ public static class Program
     {
         bool hasCommandLineArgs = false;
 
-        var fileOptions = new Option<string>("--share-files");
-        var rootCommand = new Command("MiDropShellExtHelper");
-        rootCommand.AddOption(fileOptions);
-        rootCommand.SetHandler(async (string file) =>
+        var fileOption = new Option<string>("--share-files");
+        var targetOption = new Option<string?>("--target");
+        var rootCommand = new Command("MiDropShellExtHelper")
+        {
+            fileOption,
+            targetOption,
+        };
+        rootCommand.SetHandler(async (string file, string? target) =>
         {
             if (!string.IsNullOrEmpty(file))
             {
                 hasCommandLineArgs = true;
 
-                await MiDrop.Core.XiaomiPcManagerHelper.LaunchAsync(default);
-                await MiDrop.Core.XiaomiPcManagerHelper.SendCachedFilesAsync(file, TimeSpan.FromSeconds(5));
+                if (target == "XiaomiShare")
+                {
+                    await MiDrop.Core.XiaomiPcManagerHelper.LaunchAsync(default);
+                    await MiDrop.Core.XiaomiPcManagerHelper.SendCachedFilesAsync(file, TimeSpan.FromSeconds(5));
+                }
+                else if (target == "HuaweiShare" || target == "HonorShare")
+                {
+                    var xiaomiFileContent = await FilesHelper.GetXiaomiFileAsync(file, default);
+                    var files = FilesHelper.GetFilesFromXiaomiFileContent(xiaomiFileContent);
+
+                    Console.WriteLine("files:");
+                    Console.WriteLine(string.Join(Environment.NewLine, files));
+
+                    if (target == "HuaweiShare") await HuaweiPCManagerHelper.SendFilesAsync(files);
+                    if (target == "HonorShare") await HonorPCManagerHelper.SendFilesAsync(files);
+                }
             }
-        }, fileOptions);
+        }, fileOption, targetOption);
         await rootCommand.InvokeAsync(args);
 
         if (!hasCommandLineArgs)
         {
+            var aumid = GetCurrentApplicationUserModelId();
+            var appIdIndex = aumid?.LastIndexOf('!') ?? -1;
+            var appId = appIdIndex != -1 ? aumid![(appIdIndex + 1)..] : null;
+
             var activatedEventArgs = AppInstance.GetActivatedEventArgs();
             if (activatedEventArgs.Kind == Windows.ApplicationModel.Activation.ActivationKind.ShareTarget)
             {
-                var sharedTargetActivatedEventArgs = activatedEventArgs.As<ShareTargetActivatedEventArgs>();
-                var shareOperation = sharedTargetActivatedEventArgs.ShareOperation;
-
-                shareOperation.ReportStarted();
-                try
+                if (appId == "XiaomiShare" || appId == "HuaweiShare" || appId == "HonorShare")
                 {
-                    var dataPackageView = shareOperation.Data;
+                    var sharedTargetActivatedEventArgs = activatedEventArgs.As<ShareTargetActivatedEventArgs>();
+                    var shareOperation = sharedTargetActivatedEventArgs.ShareOperation;
 
-                    if (dataPackageView.Contains(StandardDataFormats.StorageItems))
+                    shareOperation.ReportStarted();
+                    try
                     {
-                        var items = await dataPackageView.GetStorageItemsAsync();
-                        var itemsPathList = items
-                            .Select(c => c.Path)
-                            .Where(c => File.Exists(c) || Directory.Exists(c))
-                            .ToArray();
+                        var dataPackageView = shareOperation.Data;
 
-                        if (itemsPathList != null && itemsPathList.Length > 0)
+                        if (dataPackageView.Contains(StandardDataFormats.StorageItems))
                         {
-                            var key = MiDrop.Core.FilesHelper.SaveFilesAsync(itemsPathList, default).Result;
-                            await MiDrop.Core.XiaomiPcManagerHelper.LaunchAsync(default);
-                            await MiDrop.Core.XiaomiPcManagerHelper.SendCachedFilesAsync(key, TimeSpan.FromSeconds(5));
+                            var items = await dataPackageView.GetStorageItemsAsync();
+                            var itemsPathList = items
+                                .Select(c => c.Path)
+                                .Where(c => File.Exists(c) || Directory.Exists(c))
+                                .ToArray();
+
+                            if (itemsPathList != null && itemsPathList.Length > 0)
+                            {
+                                if (appId == "XiaomiShare")
+                                {
+                                    var key = MiDrop.Core.FilesHelper.SaveFilesAsync(itemsPathList, default).Result;
+                                    await MiDrop.Core.XiaomiPcManagerHelper.LaunchAsync(default);
+                                    await MiDrop.Core.XiaomiPcManagerHelper.SendCachedFilesAsync(key, TimeSpan.FromSeconds(5));
+                                }
+                                else if (appId == "HuaweiShare")
+                                {
+                                    await HuaweiPCManagerHelper.SendFilesAsync(itemsPathList);
+                                }
+                                else if (appId == "HonorShare")
+                                {
+                                    await HonorPCManagerHelper.SendFilesAsync(itemsPathList);
+                                }
+                            }
                         }
                     }
-                }
-                finally
-                {
-                    shareOperation.ReportCompleted();
-                }
+                    finally
+                    {
+                        shareOperation.ReportCompleted();
+                    }
 
-                return;
+                    return;
+                }
             }
 
-            var aumid = GetCurrentApplicationUserModelId();
-            if (aumid?.EndsWith("!Placeholder") is true)
+            if (appId == "XiaomiApp")
             {
                 await MiDrop.Core.XiaomiPcManagerHelper.LaunchAsync("open_controlcenter", default);
+            }
+            else if (appId == "HonorApp")
+            {
+
+            }
+            else if (appId == "HuaweiApp")
+            {
+
             }
         }
 

@@ -16,7 +16,7 @@ public class XiaomiPcManagerHelper
         "{1bca9901-05c3-4d01-8ad4-78da2eac9b3f}",
         ];
 
-    public static string GetXiaomiPcManagerInstallPath()
+    public static string GetInstallPath()
     {
         try
         {
@@ -40,9 +40,9 @@ public class XiaomiPcManagerHelper
         return string.Empty;
     }
 
-    public static string GetXiaomiPcManagerExecuteFile()
+    public static string GetExecuteFile()
     {
-        var installPath = GetXiaomiPcManagerInstallPath();
+        var installPath = GetInstallPath();
         if (!string.IsNullOrEmpty(installPath))
         {
             var filePath = Path.Combine(installPath, "XiaomiPcManager.exe");
@@ -67,7 +67,7 @@ public class XiaomiPcManagerHelper
             if (string.IsNullOrEmpty(arguments)) return Task.FromResult(true);
         }
 
-        var executeFile = GetXiaomiPcManagerExecuteFile();
+        var executeFile = GetExecuteFile();
         if (!string.IsNullOrEmpty(executeFile))
         {
             return LaunchAsyncCore(executeFile, arguments, cancellationToken);

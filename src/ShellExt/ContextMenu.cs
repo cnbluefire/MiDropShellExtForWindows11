@@ -8,13 +8,15 @@ namespace ShellExt
 {
     public class ContextMenu : ExplorerCommand
     {
-        private readonly string managerFolder;
+        private readonly string target;
         private readonly string icon;
+        private readonly string title;
 
-        public ContextMenu(string managerFolder)
+        public ContextMenu(string target, string icon, string title)
         {
-            this.managerFolder = managerFolder;
-            this.icon = Path.Combine(managerFolder, "XiaomiPcManager.exe,-32512");
+            this.target = target;
+            this.icon = icon;
+            this.title = title;
         }
 
         public override string? GetIcon(ShellItemArray shellItems)
@@ -24,7 +26,7 @@ namespace ShellExt
 
         public override string? GetTitle(ShellItemArray shellItems)
         {
-            return "使用小米互传发送";
+            return title;
         }
 
         public override ExplorerCommandState GetState(ShellItemArray shellItems, bool fOkToBeSlow, out bool pending)
@@ -45,7 +47,10 @@ namespace ShellExt
         public override unsafe void Invoke(ExplorerCommandInvokeEventArgs args)
         {
             var files = args.ShellItems.Select(c => c.FullPath).ToArray();
-            DllMain.SendToXiaomiPcManager(files);
+            if (files != null && files.Length > 0)
+            {
+                DllMain.StartShare(target, files);
+            }
         }
 
     }

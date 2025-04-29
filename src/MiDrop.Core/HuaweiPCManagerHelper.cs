@@ -168,7 +168,7 @@ namespace MiDrop.Core
 
             public HuaweiShareModule(string dllPath)
             {
-                module = PInvoke.LoadLibraryEx(dllPath, 0);
+                module = PInvoke.LoadLibraryEx(dllPath, Windows.Win32.System.LibraryLoader.LOAD_LIBRARY_FLAGS.LOAD_WITH_ALTERED_SEARCH_PATH);
                 if (!module.IsNull)
                 {
                     pInitialize = PInvoke.GetProcAddress(module, "Initialize");

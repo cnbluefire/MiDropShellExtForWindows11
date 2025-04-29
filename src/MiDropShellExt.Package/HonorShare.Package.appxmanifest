@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10" xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10" xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities" xmlns:rescap5="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities/5" xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10" xmlns:desktop4="http://schemas.microsoft.com/appx/manifest/desktop/windows10/4" xmlns:desktop5="http://schemas.microsoft.com/appx/manifest/desktop/windows10/5" xmlns:com="http://schemas.microsoft.com/appx/manifest/com/windows10" IgnorableNamespaces="uap rescap rescap5 desktop desktop4 desktop5 com">
-  <Identity Name="b2fe47bb-9d4b-48d9-99d4-74430c9920eb" Publisher="CN=cnbluefire" Version="1.0.9.0" />
+  <Identity Name="b2fe47bb-9d4b-48d9-99d4-74430c9920eb" Publisher="CN=cnbluefire" Version="1.0.10.0" />
   <Properties>
     <DisplayName>HonorShare Helper</DisplayName>
     <PublisherDisplayName>blue-fire</PublisherDisplayName>

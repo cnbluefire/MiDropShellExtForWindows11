@@ -1,2 +1,2 @@
 @echo off
-BuildCore.bat XiaomiShare
+powershell -ExecutionPolicy Bypass -File BuildCore.ps1 XiaomiShare

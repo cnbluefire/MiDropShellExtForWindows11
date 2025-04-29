@@ -1,97 +1,62 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-
-<Package
-  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
-  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
-  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
-  xmlns:rescap5="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities/5"
-  xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
-  xmlns:desktop4="http://schemas.microsoft.com/appx/manifest/desktop/windows10/4"
-  xmlns:desktop5="http://schemas.microsoft.com/appx/manifest/desktop/windows10/5"  
-  xmlns:com="http://schemas.microsoft.com/appx/manifest/com/windows10"
-  IgnorableNamespaces="uap rescap rescap5 desktop desktop4 desktop5 com">
-
-	<Identity
-	  Name="5f71dad9-3e77-4ada-9fad-12c2e761288f"
-	  Publisher="CN=cnbluefire"
-	  Version="1.0.8.0" />
-
-	<Properties>
-		<DisplayName>MiDrop Helper</DisplayName>
-		<PublisherDisplayName>blue-fire</PublisherDisplayName>
-		<Logo>XiaomiImages\StoreLogo.png</Logo>
-	</Properties>
-
-	<Dependencies>
-		<TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.0.0" MaxVersionTested="10.0.0.0" />
-		<TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.14393.0" MaxVersionTested="10.0.21300.0" />
-	</Dependencies>
-
-	<Resources>
-		<Resource Language="x-generate"/>
-	</Resources>
-
-	<Applications>
-		<Application Id="XiaomiApp"
-		  Executable="MiDrop.Helper\MiDrop.Helper.exe"
-		  EntryPoint="windows.fullTrustApplication">
-			<uap:VisualElements
-			  DisplayName="使用小米互传发送"
-			  Description="使用小米互传发送"
-			  BackgroundColor="transparent"
-			  Square150x150Logo="XiaomiImages\Square150x150Logo.png"
-			  Square44x44Logo="XiaomiImages\Square44x44Logo.png">
-				<uap:DefaultTile Wide310x150Logo="XiaomiImages\Wide310x150Logo.png" />
-				<uap:SplashScreen Image="XiaomiImages\SplashScreen.png" />
-			</uap:VisualElements>
-		</Application>
-		
-		<Application Id="XiaomiShare"
-		  Executable="MiDrop.Helper\MiDrop.Helper.exe"
-		  EntryPoint="windows.fullTrustApplication">
-			<uap:VisualElements
-			  DisplayName="小米互传"
-			  Description="小米互传"
-			  BackgroundColor="transparent"
-			  Square150x150Logo="XiaomiImages\Square150x150Logo.png"
-			  Square44x44Logo="XiaomiImages\Square44x44Logo.png"
-			  AppListEntry="none">
-				<uap:DefaultTile Wide310x150Logo="XiaomiImages\Wide310x150Logo.png" />
-				<uap:SplashScreen Image="XiaomiImages\SplashScreen.png" />
-			</uap:VisualElements>
-			<Extensions>
-				<com:Extension Category="windows.comServer">
-					<com:ComServer>
-						<com:SurrogateServer DisplayName="MiDropShellExt">
-							<com:Class Id="976D43D8-907F-46AF-B47F-07084C71A2F0" Path="ShellExt\ShellExt.dll" ThreadingModel="STA"/>
-						</com:SurrogateServer>
-					</com:ComServer>
-				</com:Extension>
-				<desktop4:Extension Category="windows.fileExplorerContextMenus">
-					<desktop4:FileExplorerContextMenus>
-						<desktop4:ItemType Type="*">
-							<desktop4:Verb Id="CMiDropContextMenuExt" Clsid="976D43D8-907F-46AF-B47F-07084C71A2F0"/>
-						</desktop4:ItemType>
-						<desktop5:ItemType Type="Directory">
-							<desktop5:Verb Id="CMiDropContextMenuExt" Clsid="976D43D8-907F-46AF-B47F-07084C71A2F0"/>
-						</desktop5:ItemType>
-					</desktop4:FileExplorerContextMenus>
-				</desktop4:Extension>
-				<uap:Extension Category="windows.shareTarget">
-					<uap:ShareTarget Description="使用小米互传发送">
-						<uap:SupportedFileTypes>
-							<uap:SupportsAnyFileType />
-						</uap:SupportedFileTypes>
-						<uap:DataFormat>Bitmap</uap:DataFormat>
-						<uap:DataFormat>StorageItems</uap:DataFormat>
-					</uap:ShareTarget>
-				</uap:Extension>
-			</Extensions>
-		</Application>
-	</Applications>
-
-	<Capabilities>
-		<Capability Name="internetClient" />
-		<rescap:Capability Name="runFullTrust" />
-	</Capabilities>
+<Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10" xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10" xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities" xmlns:rescap5="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities/5" xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10" xmlns:desktop4="http://schemas.microsoft.com/appx/manifest/desktop/windows10/4" xmlns:desktop5="http://schemas.microsoft.com/appx/manifest/desktop/windows10/5" xmlns:com="http://schemas.microsoft.com/appx/manifest/com/windows10" IgnorableNamespaces="uap rescap rescap5 desktop desktop4 desktop5 com">
+  <Identity Name="5f71dad9-3e77-4ada-9fad-12c2e761288f" Publisher="CN=cnbluefire" Version="1.0.9.0" />
+  <Properties>
+    <DisplayName>MiDrop Helper</DisplayName>
+    <PublisherDisplayName>blue-fire</PublisherDisplayName>
+    <Logo>XiaomiImages\StoreLogo.png</Logo>
+  </Properties>
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.0.0" MaxVersionTested="10.0.0.0" />
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.14393.0" MaxVersionTested="10.0.21300.0" />
+  </Dependencies>
+  <Resources>
+    <Resource Language="x-generate" />
+  </Resources>
+  <Applications>
+    <Application Id="XiaomiApp" Executable="MiDrop.Helper\MiDrop.Helper.exe" EntryPoint="windows.fullTrustApplication">
+      <uap:VisualElements DisplayName="使用小米互传发送" Description="使用小米互传发送" BackgroundColor="transparent" Square150x150Logo="XiaomiImages\Square150x150Logo.png" Square44x44Logo="XiaomiImages\Square44x44Logo.png">
+        <uap:DefaultTile Wide310x150Logo="XiaomiImages\Wide310x150Logo.png" />
+        <uap:SplashScreen Image="XiaomiImages\SplashScreen.png" />
+      </uap:VisualElements>
+    </Application>
+    <Application Id="XiaomiShare" Executable="MiDrop.Helper\MiDrop.Helper.exe" EntryPoint="windows.fullTrustApplication">
+      <uap:VisualElements DisplayName="小米互传" Description="小米互传" BackgroundColor="transparent" Square150x150Logo="XiaomiImages\Square150x150Logo.png" Square44x44Logo="XiaomiImages\Square44x44Logo.png" AppListEntry="none">
+        <uap:DefaultTile Wide310x150Logo="XiaomiImages\Wide310x150Logo.png" />
+        <uap:SplashScreen Image="XiaomiImages\SplashScreen.png" />
+      </uap:VisualElements>
+      <Extensions>
+        <com:Extension Category="windows.comServer">
+          <com:ComServer>
+            <com:SurrogateServer DisplayName="MiDropShellExt">
+              <com:Class Id="976D43D8-907F-46AF-B47F-07084C71A2F0" Path="ShellExt\ShellExt.dll" ThreadingModel="STA" />
+            </com:SurrogateServer>
+          </com:ComServer>
+        </com:Extension>
+        <desktop4:Extension Category="windows.fileExplorerContextMenus">
+          <desktop4:FileExplorerContextMenus>
+            <desktop4:ItemType Type="*">
+              <desktop4:Verb Id="CMiDropContextMenuExt" Clsid="976D43D8-907F-46AF-B47F-07084C71A2F0" />
+            </desktop4:ItemType>
+            <desktop5:ItemType Type="Directory">
+              <desktop5:Verb Id="CMiDropContextMenuExt" Clsid="976D43D8-907F-46AF-B47F-07084C71A2F0" />
+            </desktop5:ItemType>
+          </desktop4:FileExplorerContextMenus>
+        </desktop4:Extension>
+        <uap:Extension Category="windows.shareTarget">
+          <uap:ShareTarget Description="使用小米互传发送">
+            <uap:SupportedFileTypes>
+              <uap:SupportsAnyFileType />
+            </uap:SupportedFileTypes>
+            <uap:DataFormat>Bitmap</uap:DataFormat>
+            <uap:DataFormat>StorageItems</uap:DataFormat>
+          </uap:ShareTarget>
+        </uap:Extension>
+      </Extensions>
+    </Application>
+  </Applications>
+  <Capabilities>
+    <Capability Name="internetClient" />
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
 </Package>

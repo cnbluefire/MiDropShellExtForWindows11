@@ -1,2 +1,2 @@
 @echo off
-BuildCore.bat HuaweiShare
+powershell -ExecutionPolicy Bypass -File BuildCore.ps1 HuaweiShare

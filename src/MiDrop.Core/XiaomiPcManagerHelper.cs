@@ -46,11 +46,26 @@ public class XiaomiPcManagerHelper
         if (!string.IsNullOrEmpty(installPath))
         {
             var filePath = Path.Combine(installPath, "XiaomiPcManager.exe");
-            if (File.Exists(filePath))
-            {
-                return filePath;
-            }
+            if (File.Exists(filePath)) return filePath;
+
+            filePath = Path.Combine(installPath, "MiPcContinuity.exe");
+            if (File.Exists(filePath)) return filePath;
         }
+        return string.Empty;
+    }
+
+    public static string GetIconString()
+    {
+        var installPath = GetInstallPath();
+        if (!string.IsNullOrEmpty(installPath))
+        {
+            var icoFilePath = Path.Combine(installPath, "Assets", "midrop_logo.ico");
+            if (File.Exists(icoFilePath)) return icoFilePath;
+
+            var exeFilePath = GetExecuteFile();
+            if (File.Exists(exeFilePath)) return $"{exeFilePath},0";
+        }
+
         return string.Empty;
     }
 
@@ -202,12 +217,20 @@ public class XiaomiPcManagerHelper
 
     private unsafe static nint FindMessageWindow()
     {
-        const string WindowClassName = "XiaomiPCManager";
+        const string WindowClassName1 = "XiaomiPCManager";
+        const string WindowClassName2 = "MiPcContinuity";
 
-        fixed (char* pClassName = WindowClassName)
+        fixed (char* pClassName = WindowClassName1)
         {
-            return FindWindowW(pClassName, null);
+            var hwnd = FindWindowW(pClassName, null);
+            if (hwnd > 0) return hwnd;
         }
+        fixed (char* pClassName = WindowClassName2)
+        {
+            var hwnd = FindWindowW(pClassName, null);
+            if (hwnd > 0) return hwnd;
+        }
+        return 0;
     }
 
     [DllImport("user32.dll")]

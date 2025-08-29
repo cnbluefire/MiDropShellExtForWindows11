@@ -91,7 +91,7 @@
     <Content Include="HuaweiImages\StoreLogo.png" />
     <Content Include="HuaweiImages\Wide310x150Logo.png" />
     <Content Include="HuaweiImages\Wide310x150Logo.scale-400.png" />
-    <Content Include="HonorImages\Share.ico" />
+    <Content Include="HuaweiImages\Share.ico" />
   </ItemGroup>
   <Import Project="$(WapProjPath)\Microsoft.DesktopBridge.targets" />
   <ItemGroup>

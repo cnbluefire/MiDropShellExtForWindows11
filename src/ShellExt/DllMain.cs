@@ -21,14 +21,14 @@ namespace ShellExt
         {
             try
             {
-                var folder1 = XiaomiPcManagerHelper.GetInstallPath();
-                if (Directory.Exists(folder1))
+                var folder = XiaomiPcManagerHelper.GetInstallPath();
+                if (Directory.Exists(folder))
                 {
                     ShellExtensions.ShellExtensionsClassFactory.RegisterInProcess(
                         PackagedClsid1,
                         () => new ContextMenu(
                             "XiaomiShare",
-                            Path.Combine(folder1, "XiaomiPcManager.exe,-32512"),
+                            XiaomiPcManagerHelper.GetIconString(),
                             "使用小米互传发送"));
                 }
             }
@@ -55,7 +55,7 @@ namespace ShellExt
                 if (Directory.Exists(folder))
                 {
                     ShellExtensions.ShellExtensionsClassFactory.RegisterInProcess(
-                        PackagedClsid1,
+                        PackagedClsid3,
                         () => new ContextMenu(
                             "HuaweiShare",
                             Path.GetFullPath(Path.Combine(DllModule.BaseDirectory, "..", "HuaweiImages", "Share.ico")),

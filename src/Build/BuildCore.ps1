@@ -39,6 +39,8 @@ if ((Test-Path -Path '..\MiDropShellExt.Package\bin')) {
 
 UpdateVersion("..\MiDropShellExt.Package\$($SHARE_TARGET).Package.appxmanifest");
 
+& dotnet restore ../MiDropShellExt.sln -r win-x64
+
 & $MSBUILD_PATH ../MiDropShellExt.Package/MiDropShellExt.Package.wapproj `
   /p:ShareProjectTargetName=$SHARE_TARGET `
   /p:Configuration=Release `

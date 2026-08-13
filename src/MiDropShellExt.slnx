@@ -1,0 +1,21 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+  </Configurations>
+  <Folder Name="/Application/">
+    <Project Path="MiDrop.Core/MiDrop.Core.csproj">
+      <Platform Project="x64" />
+    </Project>
+    <Project Path="MiDrop.Helper/MiDrop.Helper.csproj">
+      <Platform Project="x64" />
+    </Project>
+    <Project Path="ShellExt/ShellExt.csproj">
+      <Platform Project="x64" />
+    </Project>
+  </Folder>
+  <Folder Name="/PackageProjects/">
+    <Project Path="MiDropShellExt.Package/MiDropShellExt.Package.wapproj" Type="c7167f0d-bc9f-4e6e-afe1-012c56b48db5">
+      <Deploy />
+    </Project>
+  </Folder>
+</Solution>

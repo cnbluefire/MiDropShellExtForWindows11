@@ -27,6 +27,14 @@ public class XiaomiPcManagerHelper
                     if (subKey != null && subKey.GetValue(null) is string path && !string.IsNullOrEmpty(path))
                     {
                         var folder = Path.GetDirectoryName(path);
+                        if (folder?.Contains("\\native-interconnect\\") is true)
+                        {
+                            while (!string.IsNullOrEmpty(folder))
+                            {
+                                if (File.Exists(Path.Combine(folder, "hyperConnect.exe"))) break;
+                                folder = Path.GetDirectoryName(folder);
+                            }
+                        }
                         if (Directory.Exists(folder))
                         {
                             return folder;
@@ -45,7 +53,10 @@ public class XiaomiPcManagerHelper
         var installPath = GetInstallPath();
         if (!string.IsNullOrEmpty(installPath))
         {
-            var filePath = Path.Combine(installPath, "XiaomiPcManager.exe");
+            var filePath = Path.Combine(installPath, "hyperConnect.exe");
+            if (File.Exists(filePath)) return filePath;
+
+            filePath = Path.Combine(installPath, "XiaomiPcManager.exe");
             if (File.Exists(filePath)) return filePath;
 
             filePath = Path.Combine(installPath, "MiPcContinuity.exe");

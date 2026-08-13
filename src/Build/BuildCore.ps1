@@ -31,10 +31,10 @@ if($MSBUILD_PATH -eq ""){
 }
 
 if ((Test-Path -Path '..\MiDropShellExt.Package\obj')) {
-    Remove-Item '..\MiDropShellExt.Package\obj' -Recurse
+    Remove-Item '..\MiDropShellExt.Package\obj' -Recurse -Force
 }
 if ((Test-Path -Path '..\MiDropShellExt.Package\bin')) {
-    Remove-Item '..\MiDropShellExt.Package\bin' -Recurse
+    Remove-Item '..\MiDropShellExt.Package\bin' -Recurse -Force
 }
 
 UpdateVersion("..\MiDropShellExt.Package\$($SHARE_TARGET).Package.appxmanifest");

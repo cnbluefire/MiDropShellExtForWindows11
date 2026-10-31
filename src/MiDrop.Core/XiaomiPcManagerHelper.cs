@@ -1,6 +1,7 @@
 ﻿using Microsoft.Win32;
 using System.Diagnostics;
 using System.IO;
+using System.IO.MemoryMappedFiles;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -8,6 +9,9 @@ namespace MiDrop.Core;
 
 public class XiaomiPcManagerHelper
 {
+    private const string ContextMenuMappingPrefix = @"Local\MiDropFileMappingObject_";
+    private static readonly TimeSpan ContextMenuMappingLifetime = TimeSpan.FromSeconds(15);
+
     private static readonly IReadOnlyList<string> PcManagerRegKeys = [
         // 5.x
         "{504d69c0-cb52-48df-b5b5-7161829fabc8}",
@@ -27,17 +31,17 @@ public class XiaomiPcManagerHelper
                     if (subKey != null && subKey.GetValue(null) is string path && !string.IsNullOrEmpty(path))
                     {
                         var folder = Path.GetDirectoryName(path);
-                        if (folder?.Contains("\\native-interconnect\\") is true)
+                        while (!string.IsNullOrEmpty(folder))
                         {
-                            while (!string.IsNullOrEmpty(folder))
+                            if (File.Exists(Path.Combine(folder, "hyperConnect.exe"))
+                                || File.Exists(Path.Combine(folder, "XiaomiPcManager.exe"))
+                                || File.Exists(Path.Combine(folder, "MiPcContinuity.exe"))
+                                || File.Exists(Path.Combine(folder, "Launch.exe")))
                             {
-                                if (File.Exists(Path.Combine(folder, "hyperConnect.exe"))) break;
-                                folder = Path.GetDirectoryName(folder);
+                                return folder;
                             }
-                        }
-                        if (Directory.Exists(folder))
-                        {
-                            return folder;
+
+                            folder = Path.GetDirectoryName(folder);
                         }
                     }
                 }
@@ -48,11 +52,27 @@ public class XiaomiPcManagerHelper
         return string.Empty;
     }
 
+    public static bool UsesContextMenuFileMapping
+    {
+        get
+        {
+            var installPath = GetInstallPath();
+            return !string.IsNullOrEmpty(installPath)
+                && !string.IsNullOrEmpty(GetLaunchFile(installPath))
+                && File.Exists(Path.Combine(installPath, "MiSmartShare", "MiDropShellExt.dll"));
+        }
+    }
+
     public static string GetExecuteFile()
     {
         var installPath = GetInstallPath();
         if (!string.IsNullOrEmpty(installPath))
         {
+            if (UsesContextMenuFileMapping)
+            {
+                return GetLaunchFile(installPath);
+            }
+
             var filePath = Path.Combine(installPath, "hyperConnect.exe");
             if (File.Exists(filePath)) return filePath;
 
@@ -65,12 +85,30 @@ public class XiaomiPcManagerHelper
         return string.Empty;
     }
 
+    private static string GetLaunchFile(string installPath)
+    {
+        var launchFile = Path.Combine(installPath, "Launch.exe");
+        if (File.Exists(launchFile)) return launchFile;
+
+        var parentFolder = Path.GetDirectoryName(installPath);
+        if (!string.IsNullOrEmpty(parentFolder))
+        {
+            launchFile = Path.Combine(parentFolder, "Launch.exe");
+            if (File.Exists(launchFile)) return launchFile;
+        }
+
+        return string.Empty;
+    }
+
     public static string GetIconString()
     {
         var installPath = GetInstallPath();
         if (!string.IsNullOrEmpty(installPath))
         {
-            var icoFilePath = Path.Combine(installPath, "Assets", "midrop_logo.ico");
+            var icoFilePath = Path.Combine(installPath, "MiSmartShare", "Assets", "midrop_logo.ico");
+            if (File.Exists(icoFilePath)) return icoFilePath;
+
+            icoFilePath = Path.Combine(installPath, "Assets", "midrop_logo.ico");
             if (File.Exists(icoFilePath)) return icoFilePath;
 
             var exeFilePath = GetExecuteFile();
@@ -106,27 +144,40 @@ public class XiaomiPcManagerHelper
         var xiaomiFile = await FilesHelper.GetXiaomiFileAsync(cacheKey, default).ConfigureAwait(false);
         if (!string.IsNullOrEmpty(xiaomiFile))
         {
+            if (UsesContextMenuFileMapping
+                && await SendFilesViaContextMenuMappingAsync(xiaomiFile).ConfigureAwait(false))
+            {
+                return true;
+            }
+
             return await SendFilesAsyncCore(xiaomiFile, timeout);
         }
         return false;
     }
 
-    public static Task<bool> SendFilesAsync(string[] files, TimeSpan timeout)
+    public static async Task<bool> SendFilesAsync(string[] files, TimeSpan timeout)
     {
         var xiaomiFile = CreateXiaomiFile(files);
         if (!string.IsNullOrEmpty(xiaomiFile))
         {
-            return SendFilesAsyncCore(xiaomiFile, timeout);
+            if (UsesContextMenuFileMapping
+                && await SendFilesViaContextMenuMappingAsync(xiaomiFile).ConfigureAwait(false))
+            {
+                return true;
+            }
+
+            return await SendFilesAsyncCore(xiaomiFile, timeout);
         }
 
-        return Task.FromResult(false);
+        return false;
     }
 
     private static Task<bool> LaunchAsyncCore(string executeFile, string? arguments, CancellationToken cancellationToken)
     {
         var psi = new ProcessStartInfo(executeFile, arguments ?? "")
         {
-            UseShellExecute = true
+            UseShellExecute = true,
+            WorkingDirectory = Path.GetDirectoryName(executeFile) ?? string.Empty
         };
 
         var tcs = new TaskCompletionSource<bool>();
@@ -140,7 +191,12 @@ public class XiaomiPcManagerHelper
         {
             try
             {
-                var process = Process.Start(executeFile);
+                var process = Process.Start(psi);
+                if (process == null)
+                {
+                    return;
+                }
+
                 while (!cancellationToken.IsCancellationRequested && !process.HasExited)
                 {
                     var messageWindow = FindMessageWindow();
@@ -154,8 +210,11 @@ public class XiaomiPcManagerHelper
                 }
             }
             catch { }
-            registration.Dispose();
-            tcs.TrySetResult(false);
+            finally
+            {
+                registration.Dispose();
+                tcs.TrySetResult(false);
+            }
         });
         thread.IsBackground = true;
         thread.Start();
@@ -163,6 +222,42 @@ public class XiaomiPcManagerHelper
         return tcs.Task;
     }
 
+    private static async Task<bool> SendFilesViaContextMenuMappingAsync(string xiaomiFiles)
+    {
+        var executeFile = GetExecuteFile();
+        if (string.IsNullOrEmpty(executeFile)) return false;
+
+        var mappingName = ContextMenuMappingPrefix + Guid.NewGuid().ToString("N");
+        var payload = Encoding.Unicode.GetBytes(xiaomiFiles + '\0');
+
+        try
+        {
+            using var mapping = MemoryMappedFile.CreateNew(mappingName, payload.Length);
+            using var view = mapping.CreateViewAccessor(0, payload.Length);
+            view.WriteArray(0, payload, 0, payload.Length);
+
+            var psi = new ProcessStartInfo(
+                executeFile,
+                $"--contextmenu_dropfile=mapping:{mappingName}")
+            {
+                UseShellExecute = true,
+                WorkingDirectory = Path.GetDirectoryName(executeFile) ?? string.Empty
+            };
+
+            using var process = Process.Start(psi);
+            if (process == null) return false;
+
+            var lifetime = FindMessageWindow() != 0
+                ? TimeSpan.FromSeconds(3)
+                : ContextMenuMappingLifetime;
+            await Task.Delay(lifetime).ConfigureAwait(false);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
 
     internal static Task<bool> SendFilesAsyncCore(string xiaomiFile, TimeSpan timeout)
     {

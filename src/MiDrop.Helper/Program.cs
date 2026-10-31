@@ -34,7 +34,10 @@ public static class Program
 
                 if (target == "XiaomiShare")
                 {
-                    await MiDrop.Core.XiaomiPcManagerHelper.LaunchAsync(default);
+                    if (!MiDrop.Core.XiaomiPcManagerHelper.UsesContextMenuFileMapping)
+                    {
+                        await MiDrop.Core.XiaomiPcManagerHelper.LaunchAsync(default);
+                    }
                     await MiDrop.Core.XiaomiPcManagerHelper.SendCachedFilesAsync(file, TimeSpan.FromSeconds(5));
                 }
                 else if (target == "HuaweiShare" || target == "HonorShare")
@@ -84,7 +87,10 @@ public static class Program
                                 if (appId == "XiaomiShare")
                                 {
                                     var key = MiDrop.Core.FilesHelper.SaveFilesAsync(itemsPathList, default).Result;
-                                    await MiDrop.Core.XiaomiPcManagerHelper.LaunchAsync(default);
+                                    if (!MiDrop.Core.XiaomiPcManagerHelper.UsesContextMenuFileMapping)
+                                    {
+                                        await MiDrop.Core.XiaomiPcManagerHelper.LaunchAsync(default);
+                                    }
                                     await MiDrop.Core.XiaomiPcManagerHelper.SendCachedFilesAsync(key, TimeSpan.FromSeconds(5));
                                 }
                                 else if (appId == "HuaweiShare")
